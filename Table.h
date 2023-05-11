@@ -14,6 +14,15 @@ class Table: public Array< Array<Content_Type> >
 
 	public:
 
+        /*
+        [x] issue 2023_05_06_233151
+        - actual: Matrix<> has default constructor, but base class Table<> does not
+        - expected: original values copied
+        */
+		Table():
+			  Array< Array<Content_Type> >(0),
+			  _rows(0), _cols(0) {}
+
 		Table(size_t colSize, size_t rowSize):
 			  Array< Array<Content_Type> >(colSize),
 			  _rows(colSize), _cols(rowSize)

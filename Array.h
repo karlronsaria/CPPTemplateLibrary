@@ -56,16 +56,21 @@ class Array: public Aggregate<Content_Type>
 			return _size;
 		}
 
+        /*
+        [x] issue 2023_05_03_133202
+        - actual: all values uninitialized
+        - expected: original values copied
+        */
 		virtual void resize(size_t newSize)
 		{
 			if(newSize >= _size)
 			{
 				Array temp(newSize);
 
-				arrayfunction::copy_values(      _array_list.reference(),
-						                    temp._array_list.reference(),
-												 _size,
-											temp._size  );
+				arrayfunction::copy_values( temp._array_list.reference(),
+						                         _array_list.reference(),
+											temp._size,
+												 _size  );
 
 				swap(_array_list, temp._array_list);
 			   _size = temp._size;

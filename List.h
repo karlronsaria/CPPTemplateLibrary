@@ -8,7 +8,7 @@
 #ifndef LIST_H_
 #define LIST_H_
 
-#include "Iterator.h"
+// #include "Iterator.h"
 #include "Collection.h"
 #include "BinaryNode.h"
 #include "Bidirectional\Connect.h"

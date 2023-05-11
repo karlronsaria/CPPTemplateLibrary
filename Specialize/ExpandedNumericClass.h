@@ -55,7 +55,7 @@ double to_double(Integral_Type integral)
 template<typename Integral_Type>
 double to_double(Rational<Integral_Type> rationalNum)
 {
-	return rationalNum.precise_ratio();
+	return rationalNum.to_double();
 }
 
 #endif /* EXPANDEDNUMERICCLASS_H_ */

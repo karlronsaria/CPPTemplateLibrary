@@ -36,7 +36,7 @@ void (*name)(classType::iterator &)
 // -----------------------------------------------------------------------
 
 
-int main()
+int not_main()
 {
 //	/*
 //	 * FORWARDLIST
