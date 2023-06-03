@@ -38,11 +38,16 @@ class Rational: private IntegralClass<Data>
          * --- Protected Functions --- *
          *******************************/
 
+        // Accessors
+
+        template <typename Type>
+        bool numericOperation(const Type, Rational &, Rational &) const
+
         // Mutators
 
-        void set_denominator (const Data          &);
-        void rationalize     (float);
-        void commonize       (Rational       &object);
+        void set_denominator(const Data &);
+        void rationalize(float);
+        void commonize(Rational &);
 
     public:
 
@@ -53,13 +58,13 @@ class Rational: private IntegralClass<Data>
         // Standard Constructors
 
         Rational();
-        Rational(const RatioForm     &);
+        Rational(const RatioForm &);
 
         // Value-setting Constructors
 
         Rational(const Data &);
         Rational(const Data &, const Data &);
-        Rational(const Data &, const Data &, const RatioForm     &);
+        Rational(const Data &, const Data &, const RatioForm &);
 
         // Destructor
 
@@ -71,13 +76,20 @@ class Rational: private IntegralClass<Data>
          ******************************/
 
         template <typename Numeric_Type>
-        friend Rational<Numeric_Type> rational   (const Numeric_Type &);
+        friend Rational<Numeric_Type> rational(
+            const Numeric_Type &
+        );
 
         template <typename Numeric_Type>
-        friend Rational<Numeric_Type> rational   (const Numeric_Type &,
-                                                  const Numeric_Type &);
+        friend Rational<Numeric_Type> rational(
+            const Numeric_Type &,
+            const Numeric_Type &
+        );
+
         template <typename Numeric_Type>
-        friend Rational<Numeric_Type> reciprocal (const Numeric_Type &);
+        friend Rational<Numeric_Type> reciprocal(
+            const Numeric_Type &
+        );
 
 
         /*********************
@@ -86,30 +98,30 @@ class Rational: private IntegralClass<Data>
 
         // Standard Accessors
 
-        const RatioForm     & form               () const;
-        const Data          & numerator          () const;
-        const Data          & denominator        () const;
+        const RatioForm & form() const;
+        const Data & numerator() const;
+        const Data & denominator() const;
 
         // Calculations
 
-        const float         & to_float           () const;
-        const double        & to_double          () const;
-        const long double   & to_long_double     () const;
-        const Rational        simplify           () const;
-        const Rational        reciprocal         () const;
+        const float & to_float() const;
+        const double & to_double() const;
+        const long double & to_long_double() const;
+        const Rational simplify() const;
+        const Rational reciprocal() const;
 
         // Verifiers
 
-              bool            is_whole           () const;
-              bool            is_proper          () const;
-              bool            common_with        (const Rational &) const;
+        bool is_whole() const;
+        bool is_proper() const;
+        bool common_with(const Rational &) const;
 
         // Arithmetic
 
-        const Rational        add                (const Rational &) const;
-        const Rational        subtract           (const Rational &) const;
-        const Rational        multiply           (const Rational &) const;
-        const Rational        divide             (const Rational &) const;
+        const Rational add(const Rational &) const;
+        const Rational subtract(const Rational &) const;
+        const Rational multiply(const Rational &) const;
+        const Rational divide(const Rational &) const throw(const char *);
 
 
         /****************************
@@ -117,54 +129,55 @@ class Rational: private IntegralClass<Data>
          ****************************/
 
         template <typename Numeric_Type>
-        friend bool are_common(const Rational<Numeric_Type> &,
-                               const Rational<Numeric_Type> &);
+        friend bool are_common(
+            const Rational<Numeric_Type> &,
+            const Rational<Numeric_Type> &
+        );
 
         friend Rational<int> rationalize(double value);
 
         template <typename Numeric_Type>
-        friend void commonize
-                    (Rational<Numeric_Type>         &,
-                     Rational<Numeric_Type>         &);
+        friend Rational<Numeric_Type> abs(
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Numeric_Type>
-        friend Rational<Numeric_Type> simplify
-                    (const Rational<Numeric_Type>   &);
-
-        template <typename Numeric_Type>
-        friend Rational<Numeric_Type> abs
-                    (const Rational<Numeric_Type>   &);
-
-        template <typename Numeric_Type>
-        friend float sqrt
-                    (const Rational<Numeric_Type>   &);
+        friend float sqrt(
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend float pow
-                    (const Type_2                   &,
-                     const Rational<Type_1>         &);
+        friend float pow(
+            const Type_2 &,
+            const Rational<Type_1> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend float pow
-                    (const Rational<Type_1>         &,
-                     const Type_2                   &);
+        friend float pow(
+            const Rational<Type_1> &,
+            const Type_2 &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend float pow
-                    (const Rational<Type_1>         &,
-                     const Rational<Type_2>         &);
+        friend float pow(
+            const Rational<Type_1> &,
+            const Rational<Type_2> &
+        );
 
         template <typename Numeric_Type>
-        friend float cos
-                    (const Rational<Numeric_Type>   &);
+        friend float cos(
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Numeric_Type>
-        friend float sin
-                    (const Rational<Numeric_Type>   &);
+        friend float sin(
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Numeric_Type>
-        friend float exp
-                    (const Rational<Numeric_Type>   &);
+        friend float exp(
+            const Rational<Numeric_Type> &
+        );
 
 
         /*****************************************
@@ -173,15 +186,15 @@ class Rational: private IntegralClass<Data>
 
         // Convert Object to Other Type
 
-        operator int         () const;
-        operator long        ();
-        operator long long   ();
-        operator float       ();
-        operator double      ();
+        operator int() const;
+        operator long();
+        operator long long();
+        operator float();
+        operator double();
         operator long double ();
 
-        operator Rational<int>           () const;
-        operator Rational<long int>      () const;
+        operator Rational<int>() const;
+        operator Rational<long int>() const;
         operator Rational<long long int> () const;
 
 
@@ -189,11 +202,15 @@ class Rational: private IntegralClass<Data>
          * --- Output Stream Operators --- *
          ***********************************/
 
-               std::ostream & operator<< (std::ostream &) const;
+        std::ostream & operator<<(
+            std::ostream &
+        ) const;
 
         template <typename Numeric_Type>
-        friend std::ostream & operator<< (std::ostream                 &,
-                                          const Rational<Numeric_Type> &);
+        friend std::ostream & operator<<(
+            std::ostream &,
+            const Rational<Numeric_Type> &
+        );
 
         /********************************
          * --- Assignment Operators --- *
@@ -253,20 +270,28 @@ class Rational: private IntegralClass<Data>
         // Arithmetic Constant (Number & Object)
 
         template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator+
-                    (int number, const Rational<Numeric_Type> &);
+        friend const Rational<Numeric_Type> operator+(
+            int number,
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator-
-                    (int number, const Rational<Numeric_Type> &);
+        friend const Rational<Numeric_Type> operator-(
+            int number,
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator*
-                    (int number, const Rational<Numeric_Type> &);
+        friend const Rational<Numeric_Type> operator*(
+            int number,
+            const Rational<Numeric_Type> &
+        );
 
         template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator/
-                    (int number, const Rational<Numeric_Type> &);
+        friend const Rational<Numeric_Type> operator/(
+            int number,
+            const Rational<Numeric_Type> &
+        );
 
 
         /********************************
@@ -276,53 +301,64 @@ class Rational: private IntegralClass<Data>
         // Standard (Object & Number)
 
         template <typename Numeric_Type>
-        bool operator<  (const Numeric_Type) const;
+        bool operator<(const Numeric_Type) const;
 
         template <typename Numeric_Type>
-        bool operator>  (const Numeric_Type) const;
+        bool operator>(const Numeric_Type) const;
 
         template <typename Numeric_Type>
-        bool operator<= (const Numeric_Type) const;
+        bool operator<=(const Numeric_Type) const;
 
         template <typename Numeric_Type>
-        bool operator>= (const Numeric_Type) const;
+        bool operator>=(const Numeric_Type) const;
 
         template <typename Numeric_Type>
-        bool operator== (const Numeric_Type) const;
+        bool operator==(const Numeric_Type) const;
 
         template <typename Numeric_Type>
-        bool operator!= (const Numeric_Type) const;
-
+        bool operator!=(const Numeric_Type) const;
 
         // Reverse (Number & Object)
 
         template <typename Type_1, typename Type_2>
-        friend bool operator<  (const          Type_1  &,
-                                const Rational<Type_2> &);
+        friend bool operator<(
+            const Type_1 &,
+            const Rational<Type_2> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend bool operator>  (const          Type_1  &,
-                                const Rational<Type_2> &);
+        friend bool operator>(
+            const Type_1 &,
+            const Rational<Type_2> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend bool operator<= (const          Type_1  &,
-                                const Rational<Type_2> &);
+        friend bool operator<=(
+            const Type_1 &,
+            const Rational<Type_2> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend bool operator>= (const          Type_1  &,
-                                const Rational<Type_2> &);
+        friend bool operator>=(
+            const Type_1 &,
+            const Rational<Type_2> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend bool operator== (const          Type_1  &,
-                                const Rational<Type_2> &);
+        friend bool operator==(
+            const Type_1 &,
+            const Rational<Type_2> &
+        );
 
         template <typename Type_1, typename Type_2>
-        friend bool operator!= (const          Type_1  &,
-                                const Rational<Type_2> &);
+        friend bool operator!=(
+            const Type_1 &,
+            const Rational<Type_2> &
+        );
 };
 
-typedef Rational<int>       rational_int;
-typedef Rational<long>      rational_long;
+typedef Rational<int> rational_int;
+typedef Rational<long> rational_long;
 typedef Rational<long long> rational_long_long;
 
 
@@ -335,18 +371,16 @@ typedef Rational<long long> rational_long_long;
 template<typename Data>
 void Rational<Data>::set_denominator(const Data & d)
 {
-    if(d == 0)
+    if (d == 0)
         return;
 
-    if(d > 0)
-    {
+    if (d > 0) {
         _denom = d;
+        return;
     }
-    else
-    {
-        _numer *= -1;
-        _denom  = abs(d);
-    }
+
+    _numer *= -1;
+    _denom = abs(d);
 }
 
 template<typename Data>
@@ -358,9 +392,9 @@ void Rational<Data>::rationalize(float value)
     count = 0;
     denomValue = (int)pow(10, count);
 
-    while(abs(value - double((int)value)) >
-          std::numeric_limits<double>::epsilon())
-    {
+    while (abs(value - double((int)value)) >
+        std::numeric_limits<double>::epsilon()
+    ) {
         count++;
         denomValue = (int)pow(10, count);
         value *= 10;
@@ -373,14 +407,11 @@ void Rational<Data>::rationalize(float value)
 template<typename Data>
 void Rational<Data>::commonize(Rational & o)
 {
-    if(!common_with(o))
-    {
-        _form = UNSIMPLIFIED;
-        o._form = UNSIMPLIFIED;
+    if (common_with(o))
+        return
 
-        *this = Rational(_numer * o._denom, _denom * o._denom);
-        o = Rational(_denom * o._numer, _denom * o._denom);
-    }
+    *this = Rational(_numer * o._denom, _denom * o._denom, UNSIMPLIFIED);
+    o = Rational(_denom * o._numer, _denom * o._denom, UNSIMPLIFIED);
 }
 
 
@@ -423,7 +454,7 @@ Rational<Data>::Rational(const Data & n, const Data & d,
     _form(f), _numer(n), _denom(d)
 {
     if (_form == SIMPLIFIED)
-        simplify();
+        *this = simplify();
 }
 
 // Destructor
@@ -479,6 +510,7 @@ const Data & Rational<Data>::denominator() const
 {
     return _denom;
 }
+
 
 // Calculations
 
@@ -558,29 +590,16 @@ const Rational<Data> Rational<Data>::multiply(const Rational & m) const
 }
 
 template <typename Data>
-const Rational<Data> Rational<Data>::divide(const Rational & d) const
+const Rational<Data> Rational<Data>::divide(const Rational & d)
+    const
+    throw(const char *)
 {
-    try
-    {
-        if(!d._denom)
-            throw "Divide by zero.";
+    if (!d._denom)
+        throw "Divide by zero.";
 
-        return multiply(d.reciprocal());
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Rational<>::divide(const Rational<> &): [!] "
-                  <<  message   << std::endl;
-    }
-
-    return *this;
+    return multiply(d.reciprocal());
 }
 
-
-/********************
- * --- Mutators --- *
- ********************/
 
 // Calculations
 
@@ -626,20 +645,6 @@ bool are_common(const Rational<Numeric_Type> & o,
                 const Rational<Numeric_Type> & p)
 {
     return o.denominator() == p.denominator();
-}
-
-template <typename Numeric_Type>
-void commonize(Rational<Numeric_Type> & o,
-               Rational<Numeric_Type> & p)
-{
-    o.commonize(p);
-}
-
-template <typename Numeric_Type>
-Rational<Numeric_Type> simplify(const Rational<Numeric_Type> & o)
-{
-    o.simplify();
-    return o;
 }
 
 template <typename Numeric_Type>
@@ -807,7 +812,7 @@ Rational<Data> & Rational<Data>::operator=(const Numeric_Type & n)
 {
     rationalize(n);
 
-    if(_form == SIMPLIFIED)
+    if (_form == SIMPLIFIED)
         simplify();
 
     return *this;
@@ -996,68 +1001,62 @@ operator/(int n, const Rational<Numeric_Type> & o)
 
 template <typename Data>
 template <typename Numeric_Type>
-bool Rational<Data>::operator<(const Numeric_Type n) const
+bool Rational<Data>::numericOperation(const Numeric_Type n, Rational & first, Rational & secnd) const
 {
     Rational thisCopy(*this);
     Rational numberRatio;
     numberRatio.rationalize(n);
     thisCopy.commonize(numberRatio);
-    return thisCopy.numerator() < numberRatio.numerator();
+    first = thisCopy;
+    secnd = numberRatio;
+}
+
+template <typename Data>
+template <typename Numeric_Type>
+bool Rational<Data>::operator<(const Numeric_Type n) const
+{
+    Rational a, b;
+    numericOperation(n, a, b);
+    return a.numerator() < b.numerator();
 }
 
 template <typename Data>
 template <typename Numeric_Type>
 bool Rational<Data>::operator>(const Numeric_Type n) const
 {
-    Rational thisCopy(*this);
-    Rational numberRatio;
-    numberRatio.rationalize(n);
-    thisCopy.commonize(numberRatio);
-    return thisCopy.numerator() > numberRatio.numerator();
+    Rational a, b;
+    numericOperation(n, a, b);
+    return a.numerator() > b.numerator();
 }
 
 template <typename Data>
 template <typename Numeric_Type>
 bool Rational<Data>::operator<=(const Numeric_Type n) const
 {
-    Rational thisCopy(*this);
-    Rational numberRatio;
-    numberRatio.rationalize(n);
-    thisCopy.commonize(numberRatio);
-    return thisCopy.numerator() <= numberRatio.numerator();
+    return !(*this > n);
 }
 
 template <typename Data>
 template <typename Numeric_Type>
 bool Rational<Data>::operator>=(const Numeric_Type n) const
 {
-    Rational thisCopy(*this);
-    Rational numberRatio;
-    numberRatio.rationalize(n);
-    thisCopy.commonize(numberRatio);
-    return thisCopy.numerator() >= numberRatio.numerator();
+    return !(*this < n);
 }
 
 template <typename Data>
 template <typename Numeric_Type>
 bool Rational<Data>::operator==(const Numeric_Type n) const
 {
-    Rational thisCopy(*this);
-    Rational numberRatio;
-    numberRatio.rationalize(n);
-    thisCopy.commonize(numberRatio);
-    return thisCopy.numerator() == numberRatio.numerator();
+    Rational a, b;
+    numericOperation(n, a, b);
+    return a.numerator() == b.numerator();
 }
 
 template <typename Data>
 template <typename Numeric_Type>
 bool Rational<Data>::operator!=(const Numeric_Type n) const
 {
-    Rational thisCopy(*this);
-    Rational numberRatio;
-    numberRatio.rationalize(n);
-    thisCopy.commonize(numberRatio);
-    return thisCopy.numerator() != numberRatio.numerator();
+    return !(*this == n);
 }
 
 
@@ -1066,61 +1065,37 @@ bool Rational<Data>::operator!=(const Numeric_Type n) const
 template <typename Type_1, typename Type_2>
 bool operator<(const Type_1 & n, const Rational<Type_2> & o)
 {
-    Rational<Type_2> objectCopy(o);
-    Rational<Type_2> numberRatio;
-    numberRatio.rationalize(n);
-    objectCopy.commonize(numberRatio);
-    return numberRatio.numerator() < objectCopy.numerator();
+    return o > n;
 }
 
 template <typename Type_1, typename Type_2>
 bool operator>(const Type_1 & n, const Rational<Type_2> & o)
 {
-    Rational<Type_2> objectCopy(o);
-    Rational<Type_2> numberRatio;
-    numberRatio.rationalize(n);
-    objectCopy.commonize(numberRatio);
-    return numberRatio.numerator() > objectCopy.numerator();
+    return o < n;
 }
 
 template <typename Type_1, typename Type_2>
 bool operator<= (const Type_1 & n, const Rational<Type_2> & o)
 {
-    Rational<Type_2> objectCopy(o);
-    Rational<Type_2> numberRatio;
-    numberRatio.rationalize(n);
-    objectCopy.commonize(numberRatio);
-    return numberRatio.numerator() <= objectCopy.numerator();
+    return o >= n;
 }
 
 template <typename Type_1, typename Type_2>
 bool operator>=(const Type_1 & n, const Rational<Type_2> & o)
 {
-    Rational<Type_2> objectCopy(o);
-    Rational<Type_2> numberRatio;
-    numberRatio.rationalize(n);
-    objectCopy.commonize(numberRatio);
-    return numberRatio.numerator() >= objectCopy.numerator();
+    return o <= n;
 }
 
 template <typename Type_1, typename Type_2>
 bool operator==(const Type_1 & n, const Rational<Type_2> & o)
 {
-    Rational<Type_2> objectCopy(o);
-    Rational<Type_2> numberRatio;
-    numberRatio.rationalize(n);
-    objectCopy.commonize(numberRatio);
-    return numberRatio.numerator() == objectCopy.numerator();
+    return o == n;
 }
 
 template <typename Type_1, typename Type_2>
 bool operator!=(const Type_1 & n, const Rational<Type_2> & o)
 {
-    Rational<Type_2> objectCopy(o);
-    Rational<Type_2> numberRatio;
-    numberRatio.rationalize(n);
-    objectCopy.commonize(numberRatio);
-    return numberRatio.numerator() != objectCopy.numerator();
+    return o != n;
 }
 
 #endif /* RATIONAL_H_ */
