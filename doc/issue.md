@@ -1,5 +1,25 @@
 # issue
 
+- [x] 2023_06_22_233725
+  - system
+    - Visual Studio
+  - when
+    - build Google Test project without ``pch.h`` (a precompiled header)
+  - actual
+    ```
+    unexpected end of file while looking for precompiled header. Did you forget to add '#include "pch.h"' to your source?
+    ```
+  - howto
+    1. goto
+        1. Project Properties
+        2. C/C++
+        3. Precompiled Headers
+        4. Precompiled Header File
+    2. set **Not Using Precompiled Headers**
+  - link
+    - url: https://stackoverflow.com/questions/8862840/unexpected-end-of-file-error
+    - retrieved: 2023_06_22
+
 - [x] 2023_06_22_003300
   - system
     - using Visual Studio
