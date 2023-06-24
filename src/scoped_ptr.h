@@ -495,13 +495,10 @@ scoped_ptr<Data>::scoped_ptr(Data * pointer):
     _data_pointer(pointer) {}
 
 template<typename Data>
-scoped_ptr<Data>::scoped_ptr(const scoped_ptr & object)
-{
-    copy(object);
-}
+scoped_ptr<Data>::scoped_ptr(const scoped_ptr & object) { copy(object); }
 
 template<typename Data>
-scoped_ptr<Data>::~scoped_ptr() { if(_data_pointer) delete _data_pointer; }
+scoped_ptr<Data>::~scoped_ptr() { if(_data_pointer) delete [] _data_pointer; }
 
 
 /**************************
@@ -607,8 +604,7 @@ void scoped_ptr<Data>::reset()
     if(_data_pointer)
     {
         delete _data_pointer;
-
-        _data_pointer  = NULL;
+        _data_pointer = NULL;
     }
 }
 

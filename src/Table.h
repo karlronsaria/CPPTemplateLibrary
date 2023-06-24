@@ -23,25 +23,25 @@ class Table: public Array< Array<Content_Type> >
 			  Array< Array<Content_Type> >(0),
 			  _rows(0), _cols(0) {}
 
-		Table(size_t colSize, size_t rowSize):
-			  Array< Array<Content_Type> >(colSize),
-			  _rows(colSize), _cols(rowSize)
+		Table(size_t rows, size_t cols):
+			  Array< Array<Content_Type> >(rows),
+			  _rows(rows), _cols(cols)
 		{
-			Array<Content_Type> temp(rowSize);
+			Array<Content_Type> temp(cols);
 			size_t              index;
 
 			foreach(*this, index) (*this)[index] = temp;
 		}
 
-		Table(size_t colSize,
-			  size_t rowSize,
+		Table(size_t rows,
+			  size_t cols,
 			  const Content_Type & content):
 
-			  Array< Array<Content_Type> >(colSize, content),
-			 _rows(colSize),
-			 _cols(rowSize)
+			  Array< Array<Content_Type> >(rows, content),
+			 _rows(rows),
+			 _cols(cols)
 		{
-			Array<Content_Type> temp(rowSize);
+			Array<Content_Type> temp(cols);
 			size_t              index;
 
 			foreach(*this, index) (*this)[index] = temp;

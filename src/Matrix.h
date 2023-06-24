@@ -155,13 +155,13 @@ Matrix<C, T>::Matrix() {}
 
 // Volume Constructor
 template <typename C, template<typename> class T>
-Matrix<C, T>::Matrix(size_t colSize, size_t rowSize):
-    T<C> (colSize, rowSize) {}
+Matrix<C, T>::Matrix(size_t rows, size_t cols):
+    T<C> (rows, cols) {}
 
 // Uniform Initializing Constructor
 template <typename C, template<typename> class T>
-Matrix<C, T>::Matrix(size_t colSize, size_t rowSize, const C & input):
-    T<C> (colSize, rowSize, input) {}
+Matrix<C, T>::Matrix(size_t rows, size_t cols, const C & input):
+    T<C> (rows, cols, input) {}
 
 // Copy Constructor
 template <typename C, template<typename> class T>
@@ -204,14 +204,14 @@ Matrix<C, T> Matrix<C, T>::complement() const
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::transpose() const
 {
-    size_t colSize = Matrix::row_size();
-    size_t rowSize = Matrix::col_size();
+    size_t rows = Matrix::row_size();
+    size_t cols = Matrix::col_size();
 
-    Matrix transposeMatrix(colSize, rowSize);
+    Matrix transposeMatrix(rows, cols);
 
-    for(size_t row = 0; row < colSize; row++)
+    for(size_t row = 0; row < rows; row++)
     {
-        for(size_t col = 0; col < rowSize; col++)
+        for(size_t col = 0; col < cols; col++)
         {
             transposeMatrix[row][col] = (*this)[col][row];
         }
@@ -289,29 +289,29 @@ C Matrix<C, T>::recursive_determinant() const
     {
         if(is_square(*this))
         {
-            size_t rowSize = Matrix::row_size();
+            size_t cols = Matrix::row_size();
 
-            if(rowSize > 6)
+            if(cols > 6)
             {
                 throw "The size of this matrix is impractical "
                       "for determinant calculation.";
             }
-            else if(rowSize > 2)
+            else if(cols > 2)
             {
                 int coefficient = 1;
 
-                for(size_t col = 0; col < rowSize; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
                     determ +=  coefficient * (*this)[0][col] *
                               (this->partial(0, col)).determinant();
 
-                    if(rowSize % 2 == 0)
+                    if(cols % 2 == 0)
                     {
                         coefficient *= -1;
                     }
                 }
             }
-            else if(rowSize == 1)
+            else if(cols == 1)
             {
                 determ = (*this)[0][0];
             }
@@ -573,14 +573,14 @@ const Matrix<C, T> Matrix<C, T>::sum
     {
         if(are_congruent(summand1, summand2))
         {
-            size_t colSize = summand1.col_size();
-            size_t rowSize = summand1.row_size();
+            size_t rows = summand1.col_size();
+            size_t cols = summand1.row_size();
 
-            sumMatrix = matrix(colSize, rowSize);
+            sumMatrix = matrix(rows, cols);
 
-            for(size_t row = 0; row < colSize; row++)
+            for(size_t row = 0; row < rows; row++)
             {
-                for(size_t col = 0; col < rowSize; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
                     sumMatrix[row][col] =
                     Data(summand2[row][col] + summand2[row][col]);
@@ -607,14 +607,14 @@ template <typename D>
 const Matrix<C, T> Matrix<C, T>::scalar_product
             (const C & scalar, const Matrix<D, T>  & factor)
 {
-    size_t colSize = factor.col_size();
-    size_t rowSize = factor.row_size();
+    size_t rows = factor.col_size();
+    size_t cols = factor.row_size();
 
-    Matrix productMatrix(colSize, rowSize);
+    Matrix productMatrix(rows, cols);
 
-    for(size_t row = 0; row < colSize; row++)
+    for(size_t row = 0; row < rows; row++)
     {
-        for(size_t col = 0; col < rowSize; col++)
+        for(size_t col = 0; col < cols; col++)
         {
             productMatrix[row][col] = scalar * factor[row][col];
         }
@@ -631,14 +631,14 @@ C Matrix<C, T>::dot_product
 {
     C       returnData;
     double  product  = 0;
-    size_t  colSize  = factor2.col_size();
-    size_t  rowSize  = factor1.row_size();
+    size_t  rows  = factor2.col_size();
+    size_t  cols  = factor1.row_size();
     bool    validRow = factor1.valid_row_index(ROW);
     bool    validCol = factor2.valid_row_index(COL);
 
     try
     {
-        if(colSize != rowSize)
+        if(rows != cols)
         {
             throw "Both arguments must have the same length. "
                   "The row's size must be equal to the column's size.";
@@ -657,7 +657,7 @@ C Matrix<C, T>::dot_product
         }
         else
         {
-            for(size_t count = 0; count < rowSize; count++)
+            for(size_t count = 0; count < cols; count++)
             {
                 product += factor1[ROW][count] * factor2[count][COL];
             }
@@ -722,9 +722,9 @@ C Matrix<C, T>::dot_product(const Matrix<A, T> & factor1,
         }
         else
         {
-            size_t rowSize = factor1.row_size();
+            size_t cols = factor1.row_size();
 
-            for(size_t count = 0; count < rowSize; count++)
+            for(size_t count = 0; count < cols; count++)
             {
                 product += factor1[0][count] * factor2[count][0];
             }
@@ -754,13 +754,13 @@ const Matrix<C, T> Matrix<C, T>::cross_product
     {
         if(are_multipliable(factor1, factor2))
         {
-            size_t colSize = factor1.col_size();
-            size_t rowSize = factor2.row_size();
-            productMatrix  = Matrix::matrix(colSize, rowSize);
+            size_t rows = factor1.col_size();
+            size_t cols = factor2.row_size();
+            productMatrix  = Matrix::matrix(rows, cols);
 
-            for(size_t row = 0; row < colSize; row++)
+            for(size_t row = 0; row < rows; row++)
             {
-                for(size_t col = 0; col < rowSize; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
                     productMatrix[row][col] =
                     round(Matrix<double, T>::dot_product(factor1, row,
@@ -792,17 +792,17 @@ const Matrix<C, T> Matrix<C, T>::cross_product
 // Named Constructors
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::matrix(size_t colSize, size_t rowSize)
+const Matrix<C, T> Matrix<C, T>::matrix(size_t rows, size_t cols)
 {
-    return Matrix(colSize, rowSize);
+    return Matrix(rows, cols);
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::matrix(size_t     colSize,
-                                        size_t     rowSize,
+const Matrix<C, T> Matrix<C, T>::matrix(size_t     rows,
+                                        size_t     cols,
                                         const C &  content)
 {
-    return Matrix(colSize, rowSize, content);
+    return Matrix(rows, cols, content);
 }
 
 template <typename C, template<typename> class T>
@@ -818,35 +818,35 @@ const Matrix<C, T> Matrix<C, T>::square(size_t size, const C & content)
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::single_row(size_t rowSize)
+const Matrix<C, T> Matrix<C, T>::single_row(size_t cols)
 {
-    Matrix singleRow(1, rowSize);
+    Matrix singleRow(1, cols);
 
     return singleRow;
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::single_row(size_t     rowSize,
+const Matrix<C, T> Matrix<C, T>::single_row(size_t     cols,
                                             const C &  content)
 {
-    Matrix singleRow(1, rowSize, content);
+    Matrix singleRow(1, cols, content);
 
     return singleRow;
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::single_col(size_t colSize)
+const Matrix<C, T> Matrix<C, T>::single_col(size_t rows)
 {
-    Matrix singleCol(colSize, 1);
+    Matrix singleCol(rows, 1);
 
     return singleCol;
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::single_col(size_t     colSize,
+const Matrix<C, T> Matrix<C, T>::single_col(size_t     rows,
                                             const C &  content)
 {
-    Matrix singleCol(colSize, 1, content);
+    Matrix singleCol(rows, 1, content);
 
     return singleCol;
 }
@@ -875,8 +875,8 @@ template <typename C, template<typename> class T>
 std::ostream & operator<<(std::ostream & out, const Matrix<C, T> & object)
 {
     size_t fieldWidth;
-    size_t colSize;
-    size_t rowSize;
+    size_t rows;
+    size_t cols;
 
     fieldWidth = out.width();
 
@@ -885,12 +885,12 @@ std::ostream & operator<<(std::ostream & out, const Matrix<C, T> & object)
         fieldWidth = Matrix<C, T>::DEFAULT_WIDTH;
     }
 
-    colSize = object.col_size();
-    rowSize = object.row_size();
+    rows = object.col_size();
+    cols = object.row_size();
 
-    for(size_t row = 0; row < colSize; row++)
+    for(size_t row = 0; row < rows; row++)
     {
-        for(size_t col = 0; col < rowSize; col++)
+        for(size_t col = 0; col < cols; col++)
         {
             out << std::setw(fieldWidth) << object[row][col];
         }
