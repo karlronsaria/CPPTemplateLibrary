@@ -14,11 +14,12 @@
 #include "Table.h"
 #include "Specialize/NumericClass.h"
 
-template < typename                 Content_Type,
-           template<typename> class Table_Class = Table >
-
-class Matrix: public  Table_Class          <Content_Type>,
-              private ExpandedNumericClass <Content_Type>
+template<
+    typename Content_Type,
+    template<typename> class Table_Class = Table>
+class Matrix:
+    public  Table_Class<Content_Type>,
+    private ExpandedNumericClass<Content_Type>
 {
     public:
 
@@ -72,34 +73,34 @@ class Matrix: public  Table_Class          <Content_Type>,
         // Calculations
 
         template <typename Type_2>
-        static const Matrix sum
-
-                    (const Matrix &,
-                     const Matrix<Type_2, Table_Class> &);
+        static const Matrix sum(
+            const Matrix &,
+            const Matrix<Type_2, Table_Class> &
+        );
 
         template <typename Second_Type>
-        static const Matrix scalar_product
-
-                    (const Content_Type &,
-                     const Matrix<Second_Type, Table_Class> &);
-
-        template <typename Type_2>
-        static Content_Type dot_product
-
-                    (const Matrix &, size_t,
-                     const Matrix<Type_2, Table_Class> &, size_t);
+        static const Matrix scalar_product(
+            const Content_Type &,
+            const Matrix<Second_Type, Table_Class> &
+        );
 
         template <typename Type_2>
-        static Content_Type dot_product
-
-                    (const Matrix &,
-                     const Matrix<Type_2, Table_Class> &);
+        static Content_Type dot_product(
+            const Matrix &, size_t,
+            const Matrix<Type_2, Table_Class> &, size_t
+        );
 
         template <typename Type_2>
-        static const Matrix cross_product
+        static Content_Type dot_product(
+            const Matrix &,
+            const Matrix<Type_2, Table_Class> &
+        );
 
-                    (const Matrix &,
-                     const Matrix<Type_2, Table_Class> &);
+        template <typename Type_2>
+        static const Matrix cross_product(
+            const Matrix &,
+            const Matrix<Type_2, Table_Class> &
+        );
 
         // Named Constructors
 
@@ -411,7 +412,7 @@ Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const
 // Assignment Operator
 template <typename C, template<typename> class T>
 template <typename D>
-Matrix<C, T> & Matrix<C, T>::operator= (const Matrix<D, T> & object)
+Matrix<C, T> & Matrix<C, T>::operator=(const Matrix<D, T> & object)
 {
     return *this = Matrix(object);
 }
