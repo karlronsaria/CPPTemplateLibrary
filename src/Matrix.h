@@ -71,10 +71,10 @@ class Matrix: public  Table_Class          <Content_Type>,
 
         // Calculations
 
-        template <typename Type_1, typename Type_2>
+        template <typename Type_2>
         static const Matrix sum
 
-                    (const Matrix<Type_1, Table_Class> &,
+                    (const Matrix &,
                      const Matrix<Type_2, Table_Class> &);
 
         template <typename Second_Type>
@@ -83,22 +83,22 @@ class Matrix: public  Table_Class          <Content_Type>,
                     (const Content_Type &,
                      const Matrix<Second_Type, Table_Class> &);
 
-        template <typename Type_1, typename Type_2>
+        template <typename Type_2>
         static Content_Type dot_product
 
-                    (const Matrix<Type_1, Table_Class> &, size_t,
+                    (const Matrix &, size_t,
                      const Matrix<Type_2, Table_Class> &, size_t);
 
-        template <typename Type_1, typename Type_2>
+        template <typename Type_2>
         static Content_Type dot_product
 
-                    (const Matrix<Type_1, Table_Class> &,
+                    (const Matrix &,
                      const Matrix<Type_2, Table_Class> &);
 
-        template <typename Type_1, typename Type_2>
+        template <typename Type_2>
         static const Matrix cross_product
 
-                    (const Matrix<Type_1, Table_Class> &,
+                    (const Matrix &,
                      const Matrix<Type_2, Table_Class> &);
 
         // Named Constructors
@@ -128,16 +128,16 @@ const Matrix<int, Table> identity_matrix(size_t);
 // Queries
 
 template <typename A, typename B, template<typename> class T>
-bool are_congruent    (const Matrix<A, T> &, const Matrix<B, T> &);
+bool are_congruent(const Matrix<A, T> &, const Matrix<B, T> &);
 
 template <typename A, typename B, template<typename> class T>
-bool are_multiplicable (const Matrix<A, T> &, const Matrix<B, T> &);
+bool are_multiplicable(const Matrix<A, T> &, const Matrix<B, T> &);
 
 template <typename A, template<typename> class T>
-bool is_square        (const Matrix<A, T> &);
+bool is_square(const Matrix<A, T> &);
 
 template <typename A, template<typename> class T>
-bool is_singular      (const Matrix<A, T> &);
+bool is_singular(const Matrix<A, T> &);
 
 
 // Matrix Methods --------------------------------------------------------
@@ -220,7 +220,6 @@ Matrix<C, T> Matrix<C, T>::partial(size_t ROW, size_t COL) const
     {
         modular_int rowCount(0, partialMatrix.rows() + 1);
         modular_int colCount(0, partialMatrix.cols() + 1);
-
         int partialRowIndex = 0;
 
         for (rowCount = ROW + 1; rowCount != ROW; rowCount++)
@@ -246,9 +245,7 @@ template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::reduction() const
 {
     Matrix temp = *this;
-
     C tempFactor;
-
     size_t i, j, k, size = temp.size();
 
     for (i = 0; i < size; ++i)
@@ -258,12 +255,12 @@ Matrix<C, T> Matrix<C, T>::reduction() const
             tempFactor = temp[k][i];
 
             for (j = i; j < size && tempFactor != 0
-                                && temp[i][i] != 0
-                                && temp[i][j] != 0; ++j)
+				&& temp[i][i] != 0
+				&& temp[i][j] != 0; ++j)
             {
-                temp[k][j] -= temp[i][j] *
-                              tempFactor /
-                              temp[i][i];
+                temp[k][j] -= temp[i][j]
+							* tempFactor
+							/ temp[i][i];
             }
         }
     }
@@ -434,29 +431,22 @@ std::ostream & Matrix<C, T>::operator<<(std::ostream & out) const
 // Calculations
 
 template <typename C, template<typename> class T>
-template <typename Type_1, typename Type_2>
+template <typename Type_2>
 const Matrix<C, T> Matrix<C, T>::sum
-            (const Matrix<Type_1, T>  & summand1,
-             const Matrix<Type_2, T>  & summand2)
+            (const Matrix & summand1,
+             const Matrix<Type_2, T> & summand2)
 {
-    Matrix sumMatrix;
-
     if (!are_congruent(summand1, summand2))
-        return sumMatrix;
+        return Matrix();
 
 	size_t rows = summand1.rows();
 	size_t cols = summand1.cols();
-
-	sumMatrix = matrix(rows, cols);
+	Matrix sumMatrix(rows, cols);
 
 	for (size_t row = 0; row < rows; row++)
-	{
 		for (size_t col = 0; col < cols; col++)
-		{
 			sumMatrix[row][col] =
-			Data(summand2[row][col] + summand2[row][col]);
-		}
-	}
+				(C)(summand2[row][col] + summand2[row][col]);
 
     return sumMatrix;
 }
@@ -468,46 +458,42 @@ const Matrix<C, T> Matrix<C, T>::scalar_product
 {
     size_t rows = factor.rows();
     size_t cols = factor.cols();
-
     Matrix productMatrix(rows, cols);
 
     for (size_t row = 0; row < rows; row++)
-    {
         for (size_t col = 0; col < cols; col++)
-        {
             productMatrix[row][col] = scalar * factor[row][col];
-        }
-    }
 
     return productMatrix;
 }
 
 template <typename C, template<typename> class T>
-template <typename A, typename B>
-C Matrix<C, T>::dot_product
-                (const Matrix<A, T> & factor1,   size_t  ROW,
-                 const Matrix<B, T> & factor2,   size_t  COL)
-{
-    double  product  = 0;
-    size_t  rows  = factor2.rows();
-    size_t  cols  = factor1.cols();
+template <typename B>
+C Matrix<C, T>::dot_product(
+    const Matrix & factor1, size_t row,
+    const Matrix<B, T> & factor2, size_t col
+) {
+    double product = 0;
+    size_t rows = factor2.rows();
+    size_t cols = factor1.cols();
 
 	if (rows != cols
-        || !factor1.valid_row_index(ROW)
-        || !factor2.valid_row_index(COL))
+        || !factor1.valid_row_index(row)
+        || !factor2.valid_row_index(col))
 		return Matrix();
 
 	for (size_t count = 0; count < cols; count++)
-		product += factor1[ROW][count] * factor2[count][COL];
+		product += factor1[row][count] * factor2[count][col];
 
     return (C)product;
 }
 
 template <typename C, template<typename> class T>
-template <typename A, typename B>
-C Matrix<C, T>::dot_product(const Matrix<A, T> & factor1,
-                            const Matrix<B, T> & factor2)
-{
+template <typename B>
+C Matrix<C, T>::dot_product(
+    const Matrix & factor1,
+    const Matrix<B, T> & factor2
+) {
     if (factor1.cols() != factor2.rows())
         return (C)0;
 
@@ -521,11 +507,11 @@ C Matrix<C, T>::dot_product(const Matrix<A, T> & factor1,
 }
 
 template <typename C, template<typename> class T>
-template <typename A, typename B>
-const Matrix<C, T> Matrix<C, T>::cross_product
-            (const Matrix<A, T> & factor1,
-             const Matrix<B, T> & factor2)
-{
+template <typename B>
+const Matrix<C, T> Matrix<C, T>::cross_product(
+    const Matrix & factor1,
+	const Matrix<B, T> & factor2
+) {
 	if (!are_multiplicable(factor1, factor2))
 		return Matrix();
 
@@ -534,19 +520,13 @@ const Matrix<C, T> Matrix<C, T>::cross_product
 	Matrix productMatrix(rows, cols);
 
 	for (size_t row = 0; row < rows; row++)
-	{
 		for (size_t col = 0; col < cols; col++)
-		{
             productMatrix[row][col] = round(
 				Matrix<double, T>::dot_product(
-					factor1,
-					row,
-					factor2,
-					col
+					factor1, row,
+					factor2, col
 				)
 			);
-		}
-	}
 
     return productMatrix;
 }
@@ -572,9 +552,10 @@ const Matrix<C, T> Matrix<C, T>::single_row(size_t cols)
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::single_row(size_t     cols,
-                                            const C &  content)
-{
+const Matrix<C, T> Matrix<C, T>::single_row(
+    size_t cols,
+    const C & content
+) {
     return Matrix(1, cols, content);
 }
 
@@ -585,9 +566,10 @@ const Matrix<C, T> Matrix<C, T>::single_col(size_t rows)
 }
 
 template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::single_col(size_t     rows,
-                                            const C &  content)
-{
+const Matrix<C, T> Matrix<C, T>::single_col(
+    size_t rows,
+    const C & content
+) {
     return Matrix(rows, 1, content);
 }
 
@@ -610,28 +592,24 @@ const Matrix<C, T> Matrix<C, T>::identity(size_t size)
 // Output Stream Operator - Friend Function
 
 template <typename C, template<typename> class T>
-std::ostream & operator<<(std::ostream & out, const Matrix<C, T> & object)
-{
-    size_t fieldWidth;
-    size_t rows;
-    size_t cols;
-
-    fieldWidth = out.width();
+std::ostream & operator<<(
+    std::ostream & out,
+    const Matrix<C, T> & object
+) {
+    size_t fieldWidth = out.width();
 
     if (fieldWidth == 0)
         fieldWidth = Matrix<C, T>::DEFAULT_WIDTH;
 
-    rows = object.rows();
-    cols = object.cols();
+    size_t rows = object.rows();
+    size_t cols = object.cols();
 
     for (size_t row = 0; row < rows; row++)
     {
         for (size_t col = 0; col < cols; col++)
-        {
             out << std::setw(fieldWidth) << object[row][col];
-        }
 
-        out << std::endl;
+        out << '\n';
     }
 
     return out;
@@ -647,11 +625,12 @@ const Matrix<int, Table> identity_matrix(size_t size)
 // Queries
 
 template <typename A, typename B, template<typename> class T>
-bool are_congruent(const Matrix<A, T> & factor1,
-                   const Matrix<B, T> & factor2)
-{
-    return factor1.rows() == factor2.rows() &&
-           factor1.cols() == factor2.cols();
+bool are_congruent(
+    const Matrix<A, T> & factor1,
+    const Matrix<B, T> & factor2
+) {
+    return factor1.rows() == factor2.rows()
+        && factor1.cols() == factor2.cols();
 }
 
 template <typename A, typename B, template<typename> class T>
@@ -670,14 +649,14 @@ bool is_square(const Matrix<A, T> & object)
 template <typename A, template<typename> class T>
 bool is_singular(const Matrix<A, T> & object)
 {
-    return (is_square(object) && object.determinant() == 0);
+    return is_square(object) && object.determinant() == 0;
 }
 
 template <typename A, template<typename> class T>
 bool is_unimodular(const Matrix<A, T> & object)
 {
-    return (is_square(object) && (object.determinant() ==  1 ||
-                                  object.determinant() == -1));
+    return is_square(object)
+        && (object.determinant() == 1 || object.determinant() == -1);
 }
 
 #endif /* MATRIX_H_ */
