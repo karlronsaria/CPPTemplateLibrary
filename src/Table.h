@@ -56,9 +56,6 @@ class Table: public Array< Array<Content_Type> >
 		size_t rows() const { return _rows; }
 		size_t cols() const { return _cols; }
 
-		size_t row_size() const { return _cols; }
-		size_t col_size() const { return _rows; }
-
 	   ~Table() {}
 
 		static Table square(size_t length)

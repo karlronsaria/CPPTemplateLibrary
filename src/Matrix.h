@@ -42,15 +42,15 @@ class Matrix: public  Table_Class          <Content_Type>,
          * --- Accessors --- *
          *********************/
 
-        Matrix         congruent             () const;
-        Matrix         complement            () const;
-        Matrix         transpose             () const;
-        Matrix         partial               (size_t, size_t) const;
-        Matrix         reduction             () const;
-        Content_Type   recursive_determinant () const;
-        Rational<long> determinant           () const;
-        Matrix         cofactor              () const;
-        Matrix         adjoint               () const;
+        Matrix         congruent           () const;
+        Matrix         complement          () const;
+        Matrix         transpose           () const;
+        Matrix         partial             (size_t, size_t) const;
+        Matrix         reduction           () const;
+        Content_Type   determinant_recurse () const throw(const char *);
+        Rational<long> determinant         () const;
+        Matrix         cofactor            () const;
+        Matrix         adjoint             () const;
 
         Matrix <float,       Table_Class>  inverse              () const;
         Matrix <double,      Table_Class>  precise_inverse      () const;
@@ -103,8 +103,6 @@ class Matrix: public  Table_Class          <Content_Type>,
 
         // Named Constructors
 
-        static const Matrix  matrix (size_t, size_t);
-        static const Matrix  matrix (size_t, size_t, const Content_Type &);
         static const Matrix  square     (size_t);
         static const Matrix  square     (size_t, const Content_Type &);
         static const Matrix  single_row (size_t);
@@ -133,7 +131,7 @@ template <typename A, typename B, template<typename> class T>
 bool are_congruent    (const Matrix<A, T> &, const Matrix<B, T> &);
 
 template <typename A, typename B, template<typename> class T>
-bool are_multipliable (const Matrix<A, T> &, const Matrix<B, T> &);
+bool are_multiplicable (const Matrix<A, T> &, const Matrix<B, T> &);
 
 template <typename A, template<typename> class T>
 bool is_square        (const Matrix<A, T> &);
@@ -171,13 +169,11 @@ Matrix<C, T>::Matrix(const Matrix & object): T<C>(object) {}
 template <typename C, template<typename> class T>
 template <typename D>
 Matrix<C, T>::Matrix(const Matrix<D, T> & object):
-    T<C> (object.col_size(), object.row_size())
+    T<C> (object.rows(), object.cols())
 {
-    for(size_t row = 0; row < Matrix::rows(); ++row)
-
-        for(size_t col = 0; col < Matrix::cols(); ++col)
-
-            (*this)[row][col] = C(object[row][col]);
+    for (size_t row = 0; row < Matrix::rows(); ++row)
+        for (size_t col = 0; col < Matrix::cols(); ++col)
+            (*this)[row][col] = (C)object[row][col];
 }
 
 // Destructor
@@ -192,30 +188,25 @@ Matrix<C, T>::~Matrix() {}
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::congruent() const
 {
-    return Matrix(Matrix::col_size(), Matrix::row_size());
+    return Matrix(rows(), cols());
 }
 
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::complement() const
 {
-    return Matrix(Matrix::row_size(), Matrix::col_size());
+    return Matrix(cols(), rows());
 }
 
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::transpose() const
 {
-    size_t rows = Matrix::row_size();
-    size_t cols = Matrix::col_size();
-
+    size_t rows = cols();
+    size_t cols = rows();
     Matrix transposeMatrix(rows, cols);
 
-    for(size_t row = 0; row < rows; row++)
-    {
-        for(size_t col = 0; col < cols; col++)
-        {
+    for (size_t row = 0; row < rows; row++)
+        for (size_t col = 0; col < cols; col++)
             transposeMatrix[row][col] = (*this)[col][row];
-        }
-    }
 
     return transposeMatrix;
 }
@@ -223,23 +214,23 @@ Matrix<C, T> Matrix<C, T>::transpose() const
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::partial(size_t ROW, size_t COL) const
 {
-    Matrix partialMatrix(Matrix::col_size() - 1, Matrix::row_size() - 1);
+    Matrix partialMatrix(rows() - 1, cols() - 1);
 
-    if(partialMatrix.col_size() > 0 && partialMatrix.row_size() > 0)
+    if (partialMatrix.rows() > 0 && partialMatrix.cols() > 0)
     {
-        modular_int rowCount(0, partialMatrix.col_size() + 1);
-        modular_int colCount(0, partialMatrix.row_size() + 1);
+        modular_int rowCount(0, partialMatrix.rows() + 1);
+        modular_int colCount(0, partialMatrix.cols() + 1);
 
         int partialRowIndex = 0;
 
-        for(rowCount = ROW + 1; rowCount != ROW; rowCount++)
+        for (rowCount = ROW + 1; rowCount != ROW; rowCount++)
         {
             int partialColIndex = 0;
 
-            for(colCount = COL + 1; colCount != COL; colCount++)
+            for (colCount = COL + 1; colCount != COL; colCount++)
             {
                 partialMatrix[partialRowIndex][partialColIndex] =
-                Matrix::element_data(rowCount, colCount);
+                    (*this)[rowCount][colCount];
 
                 partialColIndex++;
             }
@@ -260,13 +251,13 @@ Matrix<C, T> Matrix<C, T>::reduction() const
 
     size_t i, j, k, size = temp.size();
 
-    for(i = 0; i < size; ++i)
+    for (i = 0; i < size; ++i)
     {
-        for(k = i + 1; k < size; ++k)
+        for (k = i + 1; k < size; ++k)
         {
             tempFactor = temp[k][i];
 
-            for(j = i; j < size && tempFactor != 0
+            for (j = i; j < size && tempFactor != 0
                                 && temp[i][i] != 0
                                 && temp[i][j] != 0; ++j)
             {
@@ -281,57 +272,39 @@ Matrix<C, T> Matrix<C, T>::reduction() const
 }
 
 template <typename C, template<typename> class T>
-C Matrix<C, T>::recursive_determinant() const
+C Matrix<C, T>::determinant_recurse() const throw(const char *)
 {
+	size_t cols = cols();
+
+    switch (cols)
+    {
+    case 0:
+        return 0;
+    case 1:
+		return (*this)[0][0];
+    case 2:
+		return (*this)[0][0] * (*this)[1][1]
+			 - (*this)[1][0] * (*this)[0][1];
+    default:
+        break;
+    }
+
+	if (cols > 6)
+		throw "The size of this matrix is impractical "
+			  "for recursive determinant calculation.";
+
     C determ = 0;
+	int coefficient = 1;
 
-    try
-    {
-        if(is_square(*this))
-        {
-            size_t cols = Matrix::row_size();
+	for (size_t col = 0; col < cols; col++)
+	{
+		determ += coefficient
+            * (*this)[0][col]
+            * partial(0, col).determinant_recurse();
 
-            if(cols > 6)
-            {
-                throw "The size of this matrix is impractical "
-                      "for determinant calculation.";
-            }
-            else if(cols > 2)
-            {
-                int coefficient = 1;
-
-                for(size_t col = 0; col < cols; col++)
-                {
-                    determ +=  coefficient * (*this)[0][col] *
-                              (this->partial(0, col)).determinant();
-
-                    if(cols % 2 == 0)
-                    {
-                        coefficient *= -1;
-                    }
-                }
-            }
-            else if(cols == 1)
-            {
-                determ = (*this)[0][0];
-            }
-            else
-            {
-                determ = (*this)[0][0] * (*this)[1][1]
-                       - (*this)[1][0] * (*this)[0][1];
-            }
-        }
-        else
-        {
-            throw "Not a square matrix.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::determinant() const: [!] "
-                  <<  message   << std::endl;
-    }
+		if (cols % 2 == 0)
+			coefficient *= -1;
+	}
 
     return determ;
 }
@@ -339,83 +312,43 @@ C Matrix<C, T>::recursive_determinant() const
 template <typename C, template<typename> class T>
 Rational<long> Matrix<C, T>::determinant() const
 {
-    try
-    {
-        if(is_square(*this))
-        {
-            Rational<long> determ = 1;
+	Rational<long> determ = 1;
+	Matrix<Rational<long>, T> temp = *this;
+	temp = temp.reduction();
 
-            Matrix<Rational<long>, T> temp = *this;
+	for (size_t i = 0; i < temp.size(); ++i)
+		determ *= temp[i][i];
 
-            temp = temp.reduction();
-
-            for(size_t i = 0; i < temp.size(); ++i) determ *= temp[i][i];
-
-            return determ;
-        }
-        else
-        {
-            throw "Not a square matrix.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::determinant() const: [!] "
-                  <<  message   << std::endl;
-
-        return 0;
-    }
+	return determ;
 }
 
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::cofactor() const
 {
-    Matrix cofactorMatrix;
+    if (size() == 0)
+        return Matrix();
 
-    try
-    {
-        if(Matrix::size() == 0)
-        {
-            throw "The object matrix must have data.";
-        }
-        else if(!is_square(*this))
-        {
-            throw "The object matrix must be square.";
-        }
-        else
-        {
-            int    rowCoeff = 1;
-            int    colCoeff = 1;
-            size_t size     = Matrix::size();
-            cofactorMatrix  = Matrix::square(size);
+	int rowCoeff = 1;
+	int colCoeff = 1;
+	size_t size = size();
+	Matrix cofactorMatrix = square(size);
 
-            for(size_t row = 0; row < size; row++)
-            {
-                for(size_t col = 0; col < size; col++)
-                {
-                    cofactorMatrix[row][col] = rowCoeff * colCoeff *
-                    partial(row, col).determinant();
+	for (size_t row = 0; row < size; row++)
+	{
+		for (size_t col = 0; col < size; col++)
+		{
+			cofactorMatrix[row][col]
+                = rowCoeff
+                * colCoeff
+                * partial(row, col).determinant();
 
-                    if(size % 2 == 0)
-                    {
-                        colCoeff *= -1;
-                    }
-                }
+			if (size % 2 == 0)
+				colCoeff *= -1;
+		}
 
-                if(size % 2 == 0)
-                {
-                    rowCoeff *= -1;
-                }
-            }
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::cofactor() const: [!] "
-                  <<  message   << std::endl;
-    }
+		if (size % 2 == 0)
+			rowCoeff *= -1;
+	}
 
     return cofactorMatrix;
 }
@@ -423,111 +356,54 @@ Matrix<C, T> Matrix<C, T>::cofactor() const
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::adjoint() const
 {
-    Matrix adjointMatrix;
-    Matrix cofactorMatrix;
+    Matrix cofactorMatrix = cofactor();
 
-    cofactorMatrix = cofactor();
+    if (cofactorMatrix.size() == 0)
+        return Matrix();
 
-    if(cofactorMatrix.size() != 0)
-    {
-        adjointMatrix = cofactorMatrix.transpose();
-    }
-
-    return adjointMatrix;
+	return cofactorMatrix.transpose();
 }
 
 template <typename C, template<typename> class T>
 Matrix<float, T> Matrix<C, T>::inverse() const
 {
-    Matrix<float, T> inverseMatrix;
+	int determ = determinant();
 
-    try
-    {
-        int determ = determinant();
+	if (determ == 0)
+		return Matrix();
 
-        if(determ != 0)
-        {
-            inverseMatrix =
-            Matrix<float, T>::scalar_product(1.0/float(determ), adjoint());
-        }
-        else
-        {
-            throw "Not an invertible matrix. "
-                  "The object matrix must be square and singular.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::inverse() const: [!] "
-                  <<  message   << std::endl;
-    }
-
-    return inverseMatrix;
+    return Matrix<float, T>::scalar_product(
+		1.0/float(determ),
+		adjoint()
+	);
 }
 
 template <typename C, template<typename> class T>
 Matrix<double, T> Matrix<C, T>::precise_inverse() const
 {
-    Matrix<double, T> inverseMatrix;
+	int determ = determinant();
 
-    try
-    {
-        int determ = determinant();
+	if (determ == 0)
+		return Matrix();
 
-        if(determ != 0)
-        {
-            inverseMatrix =
-            Matrix<double, T>::scalar_product
-
-                    ( 1.0/double(determ), adjoint() );
-        }
-        else
-        {
-            throw "Not an invertible matrix. "
-                  "The object matrix must be square and singular.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::precise_inverse() const: [!] "
-                  <<  message   << std::endl;
-    }
-
-    return inverseMatrix;
+    return Matrix<double, T>::scalar_product(
+		1.0/double(determ),
+		adjoint()
+	);
 }
 
 template <typename C, template<typename> class T>
 Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const
 {
-    Matrix<long double, T> inverseMatrix;
+	int determ = determinant();
 
-    try
-    {
-        int determ = determinant();
+	if (determ == 0)
+		return Matrix();
 
-        if(determ != 0)
-        {
-            inverseMatrix =
-            Matrix<long double, T>::scalar_product
-
-                    (1.0/(long double)(determ), adjoint());
-        }
-        else
-        {
-            throw "Not an invertible matrix. "
-                  "The object matrix must be square and singular.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::precise_inverse() const: [!] "
-                  <<  message   << std::endl;
-    }
-
-    return inverseMatrix;
+    return Matrix<long double, T>::scalar_product(
+		1.0/(long double)(determ),
+		adjoint()
+	);
 }
 
 
@@ -540,18 +416,14 @@ template <typename C, template<typename> class T>
 template <typename D>
 Matrix<C, T> & Matrix<C, T>::operator= (const Matrix<D, T> & object)
 {
-    *this = Matrix(object);
-
-    return *this;
+    return *this = Matrix(object);
 }
 
 // Output Stream Operator - Method
 template <typename C, template<typename> class T>
 std::ostream & Matrix<C, T>::operator<<(std::ostream & out) const
 {
-    out << *this;
-
-    return out;
+    return out << *this;
 }
 
 
@@ -569,35 +441,22 @@ const Matrix<C, T> Matrix<C, T>::sum
 {
     Matrix sumMatrix;
 
-    try
-    {
-        if(are_congruent(summand1, summand2))
-        {
-            size_t rows = summand1.col_size();
-            size_t cols = summand1.row_size();
+    if (!are_congruent(summand1, summand2))
+        return sumMatrix;
 
-            sumMatrix = matrix(rows, cols);
+	size_t rows = summand1.rows();
+	size_t cols = summand1.cols();
 
-            for(size_t row = 0; row < rows; row++)
-            {
-                for(size_t col = 0; col < cols; col++)
-                {
-                    sumMatrix[row][col] =
-                    Data(summand2[row][col] + summand2[row][col]);
-                }
-            }
-        }
-        else
-        {
-            throw "The matrices are not congruent.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::sum(const Matrix<> &, const Matrix<> &): "
-                  << "[!] " << message << std::endl;
-    }
+	sumMatrix = matrix(rows, cols);
+
+	for (size_t row = 0; row < rows; row++)
+	{
+		for (size_t col = 0; col < cols; col++)
+		{
+			sumMatrix[row][col] =
+			Data(summand2[row][col] + summand2[row][col]);
+		}
+	}
 
     return sumMatrix;
 }
@@ -607,14 +466,14 @@ template <typename D>
 const Matrix<C, T> Matrix<C, T>::scalar_product
             (const C & scalar, const Matrix<D, T>  & factor)
 {
-    size_t rows = factor.col_size();
-    size_t cols = factor.row_size();
+    size_t rows = factor.rows();
+    size_t cols = factor.cols();
 
     Matrix productMatrix(rows, cols);
 
-    for(size_t row = 0; row < rows; row++)
+    for (size_t row = 0; row < rows; row++)
     {
-        for(size_t col = 0; col < cols; col++)
+        for (size_t col = 0; col < cols; col++)
         {
             productMatrix[row][col] = scalar * factor[row][col];
         }
@@ -629,51 +488,19 @@ C Matrix<C, T>::dot_product
                 (const Matrix<A, T> & factor1,   size_t  ROW,
                  const Matrix<B, T> & factor2,   size_t  COL)
 {
-    C       returnData;
     double  product  = 0;
-    size_t  rows  = factor2.col_size();
-    size_t  cols  = factor1.row_size();
-    bool    validRow = factor1.valid_row_index(ROW);
-    bool    validCol = factor2.valid_row_index(COL);
+    size_t  rows  = factor2.rows();
+    size_t  cols  = factor1.cols();
 
-    try
-    {
-        if(rows != cols)
-        {
-            throw "Both arguments must have the same length. "
-                  "The row's size must be equal to the column's size.";
-        }
-        else if(!validRow && validCol)
-        {
-            throw "The row index is out of bounds.";
-        }
-        else if(validRow && !validCol)
-        {
-            throw "The column index is out of bounds.";
-        }
-        else if(!validRow && !validCol)
-        {
-            throw "The row and column indices are out of bounds.";
-        }
-        else
-        {
-            for(size_t count = 0; count < cols; count++)
-            {
-                product += factor1[ROW][count] * factor2[count][COL];
-            }
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::dot_product(Matrix<>, const int, "
-                  <<                       "Matrix<>, const int): [!] "
-                  <<  message   << std::endl;
-    }
+	if (rows != cols
+        || !factor1.valid_row_index(ROW)
+        || !factor2.valid_row_index(COL))
+		return Matrix();
 
-    returnData = C(product);
+	for (size_t count = 0; count < cols; count++)
+		product += factor1[ROW][count] * factor2[count][COL];
 
-    return returnData;
+    return (C)product;
 }
 
 template <typename C, template<typename> class T>
@@ -681,65 +508,16 @@ template <typename A, typename B>
 C Matrix<C, T>::dot_product(const Matrix<A, T> & factor1,
                             const Matrix<B, T> & factor2)
 {
-    C     returnData;
-    int   product           = 0;
-    bool  firstFactorIsRow  = false;
-    bool  secondFactorIsCol = false;
+    if (factor1.cols() != factor2.rows())
+        return (C)0;
 
-    if(is_a_single_col(factor1))
-    {
-        factor1 = factor1.transpose();
-        firstFactorIsRow = true;
-    }
+    double product = 0;
+	size_t cols = factor1.cols();
 
-    if(is_a_single_row(factor2))
-    {
-        factor2 = factor2.transpose();
-        secondFactorIsCol = true;
-    }
+	for (size_t count = 0; count < cols; count++)
+		product += factor1[0][count] * factor2[count][0];
 
-    try
-    {
-        if(!firstFactorIsRow && secondFactorIsCol)
-        {
-            throw "The first argument is invalid. "
-                  "It must be a single row or column.";
-        }
-        else if(firstFactorIsRow && !secondFactorIsCol)
-        {
-            throw "The second argument is invalid. "
-                  "It must be a single row or column.";
-        }
-        else if(!firstFactorIsRow && !secondFactorIsCol)
-        {
-            throw "Both arguments are invalid. "
-                  "They must be single rows or columns.";
-        }
-        else if(factor1.row_size() != factor2.col_size())
-        {
-            throw "Both arguments must have the same length. "
-                  "The row's size must be equal to the column's size.";
-        }
-        else
-        {
-            size_t cols = factor1.row_size();
-
-            for(size_t count = 0; count < cols; count++)
-            {
-                product += factor1[0][count] * factor2[count][0];
-            }
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::dot_product(Matrix<>, Matrix<>): [!] "
-                  <<  message   << std::endl;
-    }
-
-    returnData = C(product);
-
-    return returnData;
+    return (C)product;
 }
 
 template <typename C, template<typename> class T>
@@ -748,62 +526,32 @@ const Matrix<C, T> Matrix<C, T>::cross_product
             (const Matrix<A, T> & factor1,
              const Matrix<B, T> & factor2)
 {
-    Matrix productMatrix;
+	if (!are_multiplicable(factor1, factor2))
+		return Matrix();
 
-    try
-    {
-        if(are_multipliable(factor1, factor2))
-        {
-            size_t rows = factor1.col_size();
-            size_t cols = factor2.row_size();
-            productMatrix  = Matrix::matrix(rows, cols);
+	size_t rows = factor1.rows();
+	size_t cols = factor2.cols();
+	Matrix productMatrix(rows, cols);
 
-            for(size_t row = 0; row < rows; row++)
-            {
-                for(size_t col = 0; col < cols; col++)
-                {
-                    productMatrix[row][col] =
-                    round(Matrix<double, T>::dot_product(factor1, row,
-                                                         factor2, col));
-                }
-            }
-        }
-        else if(are_multipliable(factor1, factor2))
-        {
-            productMatrix = cross_product(factor2, factor1);
-        }
-        else
-        {
-            throw "The factors cannot be multiplied."
-                  "The first factor's row size must be equal "
-                  "to the second factor's column size.";
-        }
-    }
-    catch(const char* message)
-    {
-        std::cerr <<  std::endl << std::endl
-                  << "Matrix<>::cross_product(Matrix<>, Matrix<>): [!] "
-                  <<  message   << std::endl;
-    }
+	for (size_t row = 0; row < rows; row++)
+	{
+		for (size_t col = 0; col < cols; col++)
+		{
+            productMatrix[row][col] = round(
+				Matrix<double, T>::dot_product(
+					factor1,
+					row,
+					factor2,
+					col
+				)
+			);
+		}
+	}
 
     return productMatrix;
 }
 
 // Named Constructors
-
-template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::matrix(size_t rows, size_t cols)
-{
-    return Matrix(rows, cols);
-}
-
-template <typename C, template<typename> class T>
-const Matrix<C, T> Matrix<C, T>::matrix(size_t     rows,
-                                        size_t     cols,
-                                        const C &  content)
-{
-    return Matrix(rows, cols, content);
-}
 
 template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::square(size_t size)
@@ -820,46 +568,36 @@ const Matrix<C, T> Matrix<C, T>::square(size_t size, const C & content)
 template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::single_row(size_t cols)
 {
-    Matrix singleRow(1, cols);
-
-    return singleRow;
+    return Matrix(1, cols);
 }
 
 template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::single_row(size_t     cols,
                                             const C &  content)
 {
-    Matrix singleRow(1, cols, content);
-
-    return singleRow;
+    return Matrix(1, cols, content);
 }
 
 template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::single_col(size_t rows)
 {
-    Matrix singleCol(rows, 1);
-
-    return singleCol;
+    return Matrix(rows, 1);
 }
 
 template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::single_col(size_t     rows,
                                             const C &  content)
 {
-    Matrix singleCol(rows, 1, content);
-
-    return singleCol;
+    return Matrix(rows, 1, content);
 }
 
 template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::identity(size_t size)
 {
-    Matrix id = Matrix::square(size, 0);
+    Matrix id = square(size, 0);
 
-    for(size_t count = 0; count < size; count++)
-    {
+    for (size_t count = 0; count < size; count++)
         id[count][count] = 1;
-    }
 
     return id;
 }
@@ -880,17 +618,15 @@ std::ostream & operator<<(std::ostream & out, const Matrix<C, T> & object)
 
     fieldWidth = out.width();
 
-    if(fieldWidth == 0)
-    {
+    if (fieldWidth == 0)
         fieldWidth = Matrix<C, T>::DEFAULT_WIDTH;
-    }
 
-    rows = object.col_size();
-    cols = object.row_size();
+    rows = object.rows();
+    cols = object.cols();
 
-    for(size_t row = 0; row < rows; row++)
+    for (size_t row = 0; row < rows; row++)
     {
-        for(size_t col = 0; col < cols; col++)
+        for (size_t col = 0; col < cols; col++)
         {
             out << std::setw(fieldWidth) << object[row][col];
         }
@@ -914,21 +650,21 @@ template <typename A, typename B, template<typename> class T>
 bool are_congruent(const Matrix<A, T> & factor1,
                    const Matrix<B, T> & factor2)
 {
-    return factor1.col_size() == factor2.col_size() &&
-           factor1.row_size() == factor2.row_size();
+    return factor1.rows() == factor2.rows() &&
+           factor1.cols() == factor2.cols();
 }
 
 template <typename A, typename B, template<typename> class T>
-bool are_multipliable(const Matrix<A, T> & factor1,
+bool are_multiplicable(const Matrix<A, T> & factor1,
                       const Matrix<B, T> & factor2)
 {
-    return factor1.row_size() == factor2.col_size();
+    return factor1.cols() == factor2.rows();
 }
 
 template <typename A, template<typename> class T>
 bool is_square(const Matrix<A, T> & object)
 {
-    return object.col_size() == object.row_size();
+    return object.rows() == object.cols();
 }
 
 template <typename A, template<typename> class T>
