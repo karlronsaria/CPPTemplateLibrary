@@ -43,6 +43,10 @@ class Matrix:
             std::initializer_list<std::initializer_list<Content_Type>>
         );
 
+        Matrix(
+            std::initializer_list<std::initializer_list<Content_Type>>
+        );
+
        ~Matrix();
 
         /*********************
@@ -69,6 +73,9 @@ class Matrix:
 
         template <typename Second_Type>
         Matrix & operator= (const Matrix<Second_Type, Table_Class> &);
+
+        template <typename Second_Type>
+        Matrix & operator= (std::initializer_list<std::initializer_list<Second_Type>>);
 
         std::ostream & operator<< (std::ostream &) const;
 
@@ -431,6 +438,21 @@ Matrix<C, T> & Matrix<C, T>::operator=(const Matrix<D, T> & object)
     return *this = Matrix(object);
 }
 
+template <typename C, template<typename> class T>
+template <typename D>
+Matrix<C, T> & Matrix<C, T>::operator=(std::initializer_list<std::initializer_list<D>> list)
+{
+    size_t rows = list.size();
+	auto it = list.begin()
+    size_t cols = it->size();
+
+    while (++it != list.end())
+        if (it->size() < cols)
+            cols = it->size();
+
+    return *this = Matrix(rows, cols, list);
+}
+
 // Output Stream Operator - Method
 template <typename C, template<typename> class T>
 std::ostream & Matrix<C, T>::operator<<(std::ostream & out) const
@@ -461,7 +483,7 @@ const Matrix<C, T> Matrix<C, T>::sum
 	for (size_t row = 0; row < rows; row++)
 		for (size_t col = 0; col < cols; col++)
 			sumMatrix[row][col] =
-				(C)(summand2[row][col] + summand2[row][col]);
+				(C)(summand1[row][col] + summand2[row][col]);
 
     return sumMatrix;
 }
@@ -611,10 +633,10 @@ std::ostream & operator<<(
     std::ostream & out,
     const Matrix<C, T> & object
 ) {
-    size_t fieldWidth = out.width();
+    // size_t fieldWidth = out.width();
 
-    if (fieldWidth == 0)
-        fieldWidth = Matrix<C, T>::DEFAULT_WIDTH;
+    // if (fieldWidth == 0)
+    //     fieldWidth = Matrix<C, T>::DEFAULT_WIDTH;
 
     size_t rows = object.rows();
     size_t cols = object.cols();
@@ -622,7 +644,7 @@ std::ostream & operator<<(
     for (size_t row = 0; row < rows; row++)
     {
         for (size_t col = 0; col < cols; col++)
-            out << std::setw(fieldWidth) << object[row][col];
+            out << ' ' << object[row][col];
 
         out << '\n';
     }

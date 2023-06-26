@@ -574,7 +574,7 @@ void scoped_ptr<Data>::deallocate()
 {
     if(_data_pointer)
     {
-        delete _data_pointer;
+        delete [] _data_pointer;
 
         _data_pointer = NULL;
     }

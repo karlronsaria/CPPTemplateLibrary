@@ -41,7 +41,7 @@ class Table: public Array<Array<Content_Type>>
 			std::initializer_list<std::initializer_list<Content_Type>>
 				list
 		):
-			Array<Array<Content_Type>>(rows, cols),
+			Array<Array<Content_Type>>(rows),
 			_rows(rows),
 			_cols(cols)
 		{
@@ -59,6 +59,21 @@ class Table: public Array<Array<Content_Type>>
 
 				++rowIt;
 			}
+		}
+
+		Table(
+			std::initializer_list<std::initializer_list<Content_Type>>
+				list
+		) {
+			size_t rows = list.size();
+			auto it = list.begin()
+			size_t cols = it->size();
+
+			while (++it != list.end())
+				if (it->size() < cols)
+					cols = it->size();
+
+			*this = Matrix(rows, cols, list);
 		}
 
 		Table(
