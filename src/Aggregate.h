@@ -14,14 +14,10 @@ template <typename Type>
 class Aggregate
 {
 	public:
-
 		virtual ~Aggregate() {}
-
 	    virtual size_t size() const = 0;
-
 		virtual const Type & operator[](size_t index) const = 0;
-
-		virtual       Type & operator[](size_t index)       = 0;
+		virtual Type & operator[](size_t index) = 0;
 };
 
 #ifndef foreach

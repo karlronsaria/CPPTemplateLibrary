@@ -18,7 +18,7 @@ template<
     typename Content_Type,
     template<typename> class Table_Class = Table>
 class Matrix:
-    public  Table_Class<Content_Type>,
+    public Table_Class<Content_Type>,
     private ExpandedNumericClass<Content_Type>
 {
     public:
@@ -36,6 +36,12 @@ class Matrix:
 
         template <typename Second_Type>
         Matrix(const Matrix<Second_Type, Table_Class> &);
+
+        Matrix(
+            size_t,
+            size_t,
+            std::initializer_list<std::initializer_list<Content_Type>>
+        );
 
        ~Matrix();
 
@@ -172,10 +178,18 @@ template <typename D>
 Matrix<C, T>::Matrix(const Matrix<D, T> & object):
     T<C> (object.rows(), object.cols())
 {
-    for (size_t row = 0; row < Matrix::rows(); ++row)
-        for (size_t col = 0; col < Matrix::cols(); ++col)
+    for (size_t row = 0; row < rows(); ++row)
+        for (size_t col = 0; col < cols(); ++col)
             (*this)[row][col] = (C)object[row][col];
 }
+
+// Component-Setting Constructor
+template <typename C, template<typename> class T>
+Matrix<C, T>::Matrix(
+    size_t rows,
+    size_t cols,
+    std::initializer_list<std::initializer_list<C>> components
+): T<C> (rows, cols, components) {}
 
 // Destructor
 template <typename C, template<typename> class T>

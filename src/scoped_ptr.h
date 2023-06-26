@@ -1,4 +1,3 @@
-
 #ifndef SCOPED_PTR_H_
 #define SCOPED_PTR_H_
 
@@ -38,6 +37,7 @@ class scoped_ptr/*: public safe_bool<>*/
         scoped_ptr ();
         scoped_ptr (Data             * pointer);
         scoped_ptr (const scoped_ptr & object);
+        scoped_ptr (std::initializer_list<Data> list);
        ~scoped_ptr ();
 
         /**************************
@@ -496,6 +496,13 @@ scoped_ptr<Data>::scoped_ptr(Data * pointer):
 
 template<typename Data>
 scoped_ptr<Data>::scoped_ptr(const scoped_ptr & object) { copy(object); }
+
+template<typename Data>
+scoped_ptr<Data>::scoped_ptr(std::initializer_list<Data> list):
+    _data_pointer(new Data[list.size()])
+{
+    std::copy(list.begin(), list.end(), _data_pointer);
+}
 
 template<typename Data>
 scoped_ptr<Data>::~scoped_ptr() { if(_data_pointer) delete [] _data_pointer; }
