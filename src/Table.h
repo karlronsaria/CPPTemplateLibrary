@@ -41,9 +41,7 @@ class Table: public Array<Array<Content_Type>>
 			std::initializer_list<std::initializer_list<Content_Type>>
 				list
 		):
-			Array<Array<Content_Type>>(rows),
-			_rows(rows),
-			_cols(cols)
+			Table(rows, cols)
 		{
 			auto rowIt = list.begin();
 
@@ -66,14 +64,14 @@ class Table: public Array<Array<Content_Type>>
 				list
 		) {
 			size_t rows = list.size();
-			auto it = list.begin()
+			auto it = list.begin();
 			size_t cols = it->size();
 
 			while (++it != list.end())
 				if (it->size() < cols)
 					cols = it->size();
 
-			*this = Matrix(rows, cols, list);
+			*this = Table(rows, cols, list);
 		}
 
 		Table(
@@ -81,26 +79,35 @@ class Table: public Array<Array<Content_Type>>
 			size_t cols,
 			const Content_Type & content
 		):
-			Array<Array<Content_Type>>(rows, content),
+			Array<Array<Content_Type>>(rows),
 			_rows(rows),
 			_cols(cols)
 		{
-			Array<Content_Type> temp(cols);
+			Array<Content_Type> temp(cols, content);
 			size_t index;
 
 			foreach (*this, index)
 				(*this)[index] = temp;
 		}
 
-		Table(const Table & object):
-			Array< Array<Content_Type> >(object),
-			_rows(object._rows),
-			_cols(object._cols) {}
+		Table(const Table &) = default;
+		Table & operator=(const Table &) = default;
+		virtual ~Table() = default;
 
 		size_t rows() const { return _rows; }
 		size_t cols() const { return _cols; }
 
-	   ~Table() {}
+		bool operator==(const Table & other) const {
+			if (rows() != other.rows() || cols() != other.cols())
+				return false;
+
+			for (int row = 0; row < rows(); ++row)
+				for (int col = 0; col < cols(); ++col)
+					if ((*this)[row][col] != other[row][col])
+						return false;
+
+			return true;
+		}
 
 		static Table square(size_t length)
 		{

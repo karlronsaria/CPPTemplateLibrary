@@ -72,12 +72,14 @@ class Matrix:
          ******************************/
 
         template <typename Second_Type>
-        Matrix & operator= (const Matrix<Second_Type, Table_Class> &);
+        Matrix & operator=(const Matrix<Second_Type, Table_Class> &);
 
         template <typename Second_Type>
-        Matrix & operator= (std::initializer_list<std::initializer_list<Second_Type>>);
+        Matrix & operator=(std::initializer_list<std::initializer_list<Second_Type>>);
 
-        std::ostream & operator<< (std::ostream &) const;
+        bool operator==(const Matrix &) const;
+
+        std::ostream & operator<<(std::ostream &) const;
 
         /**************************
          * --- Static Methods --- *
@@ -196,7 +198,13 @@ Matrix<C, T>::Matrix(
     size_t rows,
     size_t cols,
     std::initializer_list<std::initializer_list<C>> components
-): T<C> (rows, cols, components) {}
+): T<C>(rows, cols, components) {}
+
+// Component-Setting Constructor
+template <typename C, template<typename> class T>
+Matrix<C, T>::Matrix(
+    std::initializer_list<std::initializer_list<C>> components
+): T<C>(components) {}
 
 // Destructor
 template <typename C, template<typename> class T>
@@ -453,6 +461,12 @@ Matrix<C, T> & Matrix<C, T>::operator=(std::initializer_list<std::initializer_li
     return *this = Matrix(rows, cols, list);
 }
 
+template <typename C, template<typename> class T>
+bool Matrix<C, T>::operator==(const Matrix & other) const
+{
+    return T<C>::operator==(other);
+}
+
 // Output Stream Operator - Method
 template <typename C, template<typename> class T>
 std::ostream & Matrix<C, T>::operator<<(std::ostream & out) const
@@ -510,16 +524,12 @@ C Matrix<C, T>::dot_product(
     const Matrix & factor1, size_t row,
     const Matrix<B, T> & factor2, size_t col
 ) {
+    if (!are_multiplicable(factor1, factor2))
+        return (C)0;
+
     double product = 0;
-    size_t rows = factor2.rows();
-    size_t cols = factor1.cols();
 
-	if (rows != cols
-        || !factor1.valid_row_index(row)
-        || !factor2.valid_row_index(col))
-		return Matrix();
-
-	for (size_t count = 0; count < cols; count++)
+	for (size_t count = 0; count < factor1.cols(); count++)
 		product += factor1[row][count] * factor2[count][col];
 
     return (C)product;
@@ -558,7 +568,7 @@ const Matrix<C, T> Matrix<C, T>::cross_product(
 
 	for (size_t row = 0; row < rows; row++)
 		for (size_t col = 0; col < cols; col++)
-            productMatrix[row][col] = round(
+            productMatrix[row][col] = (C)round(
 				Matrix<double, T>::dot_product(
 					factor1, row,
 					factor2, col

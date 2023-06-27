@@ -1,53 +1,46 @@
 #include "../src/Matrix.h"
 #include <gtest/gtest.h>
+#include <fstream>
 
-// todo
-int main() {
-	std::cout << "Hello, world!\n";
+template <typename C, template <typename> class T = Table>
+Matrix<C, T>
+NextMatrix(std::istream &);
 
-	Matrix<int> m1(3, 3, {
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9}
-	});
+namespace {
+	TEST(Matrix, Arithmetic) {
+		std::ifstream file;
+		file.open("./res/int_matrix_001.txt");
+		Matrix<int> op1, op2, sum, cross;
 
-	Matrix<int> m2(3, 3, {
-		{3, 5, 7},
-		{11, 13, 17},
-		{19, 23, 29}
-	});
+		while (file) {
+			op1 = NextMatrix<int>(file);
+			op2 = NextMatrix<int>(file);
+			sum = NextMatrix<int>(file);
+			cross = NextMatrix<int>(file);
+			EXPECT_EQ(sum, Matrix<int>::sum(op1, op2));
+			EXPECT_EQ(cross, Matrix<int>::cross_product(op1, op2));
+		}
 
-	Matrix<int> m;
-
-	std::cout
-		<< "Rows: " << m1.rows() << '\n'
-		<< "Middle: " << m1[1][1] << '\n'
-		<< "Full:\n" << m1 << '\n'
-		;
-
-	m = Matrix<int>::sum(m1, m2);
-
-	std::cout
-		<< "Rows: " << m.rows() << '\n'
-		<< "Middle: " << m[1][1] << '\n'
-		<< "Full:\n" << m << '\n'
-		;
-
-
-	scoped_ptr<int> ptr1(new int[1]);
-	scoped_ptr<Array<int>> ptr2(new Array<int>[0]);
-	Array<int> a1(0);
-	Array<Array<int>> a2(0);
-	Array<Array<int>> a3(1);
-	Table<char> t1(0, 0);
-	Table<char> t2(1, 1);
-	Table<char> t3;
+		file.close();
+	}
 }
 
-// namespace {
-// 	TEST(Matrix, Addition) {
-// 	}
-// }
+template <typename C, template <typename> class T>
+Matrix<C, T>
+NextMatrix(std::istream & input) {
+	C rows = (C)0, cols = (C)0, e = (C)0;
+	input >> rows >> cols;
+	Matrix<C, T> myMatrix(rows, cols);
+
+	for (int row = 0; row < rows; ++row) {
+		for (int col = 0; col < cols; ++col) {
+			input >> e;
+			myMatrix[row][col] = e;
+		}
+	}
+
+	return myMatrix;
+}
 
 
 
