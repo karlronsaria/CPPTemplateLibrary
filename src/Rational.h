@@ -69,6 +69,9 @@ class Rational: private IntegralClass<Data>
         Rational(const Data &, const Data &, const RatioForm &);
         Rational(const RatioForm &);
 
+        template <typename Numeric_Type>
+        Rational(const Numeric_Type &);
+
         // Destructor
 
         ~Rational() = default;
@@ -83,7 +86,7 @@ class Rational: private IntegralClass<Data>
         // // todo
         // const RatioForm & form() const;
 
-        const RatioForm& form() const {
+        const RatioForm & form() const {
             return _form;
         }
 
@@ -295,8 +298,11 @@ class Rational: private IntegralClass<Data>
         bool operator>(const Rational &) const;
         bool operator<=(const Rational &) const;
         bool operator>=(const Rational &) const;
-        bool operator==(const Rational &) const;
+        // bool operator==(const Rational &) const;
+
         bool operator!=(const Rational &) const;
+
+        bool operator==(const Rational &) const;
 
         // template <typename Numeric_Type>
         // bool operator<(const Numeric_Type &) const;
@@ -342,17 +348,17 @@ class Rational: private IntegralClass<Data>
             const Rational<Type_2> &
         );
 
-        template <typename Type_1, typename Type_2>
-        friend bool operator==(
-            const Type_1 &,
-            const Rational<Type_2> &
-        );
+        // template <typename Type_1, typename Type_2>
+        // friend bool operator==(
+        //     const Type_1 &,
+        //     const Rational<Type_2> &
+        // );
 
-        template <typename Type_1, typename Type_2>
-        friend bool operator!=(
-            const Type_1 &,
-            const Rational<Type_2> &
-        );
+        // template <typename Type_1, typename Type_2>
+        // friend bool operator!=(
+        //     const Type_1 &,
+        //     const Rational<Type_2> &
+        // );
 };
 
 typedef Rational<int> rational_int;
@@ -402,7 +408,7 @@ const Rational<Data> Rational<Data>::rationalize(float value)
         value *= 10;
     }
 
-    return Rational(value, denomValue);
+    return Rational((Data)value, (Data)denomValue);
 }
 
 template<typename Data>
@@ -459,6 +465,13 @@ Rational<Data>::Rational(const Data & n, const Data & d,
 {
     if (_form == SIMPLIFIED)
         *this = simplify();
+}
+
+template<typename Data>
+template <typename Numeric_Type>
+Rational<Data>::Rational(const Numeric_Type & n)
+{
+    *this = rationalize(n);
 }
 
 /*********************
@@ -683,19 +696,19 @@ float exp(const Rational<Numeric_Type> & o)
 template <typename Data>
 Rational<Data>::operator int() const
 {
-    return int(to_float());
+    return (int)to_float();
 }
 
 template <typename Data>
 Rational<Data>::operator long()
 {
-    return long(to_float());
+    return (long)to_float();
 }
 
 template <typename Data>
 Rational<Data>::operator long long()
 {
-    return (long long)(to_float());
+    return (long long)to_float();
 }
 
 template <typename Data>
@@ -722,7 +735,7 @@ Rational<Data>::operator Rational<int>() const
     return Rational<int>(
         (int)numer(),
         (int)denom(),
-        form()
+        (Rational<int>::RatioForm)form()
     );
 }
 
@@ -732,7 +745,7 @@ Rational<Data>::operator Rational<long int>() const
     return Rational<long int>(
         (long int)numer(),
         (long int)denom(),
-        form()
+        (Rational<long int>::RatioForm)form()
     );
 }
 
@@ -742,7 +755,7 @@ Rational<Data>::operator Rational<long long int>() const
     return Rational<long long int>(
         (long long int)numer(),
         (long long int)denom(),
-        form()
+        (Rational<long long int>::RatioForm)form()
     );
 }
 
@@ -1001,18 +1014,26 @@ bool Rational<Data>::operator>=(const Rational & n) const
     return !(*this < n);
 }
 
-template <typename Data>
-bool Rational<Data>::operator==(const Rational & n) const
-{
-    Rational a, b;
-    numericOperation(n, a, b);
-    return a.numer() == b.numer();
-}
+// template <typename Data>
+// bool Rational<Data>::operator==(const Rational & n) const
+// {
+//     Rational a, b;
+//     numericOperation(n, a, b);
+//     return a.numer() == b.numer();
+// }
 
 template <typename Data>
 bool Rational<Data>::operator!=(const Rational & n) const
 {
     return !(*this == n);
+}
+
+template <typename Data>
+bool Rational<Data>::operator==(const Rational & n) const
+{
+	Rational<long> a, b;
+	numericOperation(n, a, b);
+	return a.numer() == b.numer();
 }
 
 // template <typename Data>
@@ -1098,20 +1119,20 @@ bool operator>=(const Type_1 & n, const Rational<Type_2> & o)
     // return o <= n;
 }
 
-template <typename Type_1, typename Type_2>
-bool operator==(const Type_1 & n, const Rational<Type_2> & o)
-{
-	Rational<long> a, b;
-	o.numericOperation(n, a, b);
-	return a.numer() == b.numer();
-    // return o == n;
-}
+// template <typename Type_1, typename Type_2>
+// bool operator==(const Type_1 & n, const Rational<Type_2> & o)
+// {
+// 	Rational<long> a, b;
+// 	o.numericOperation(n, a, b);
+// 	return a.numer() == b.numer();
+//     // return o == n;
+// }
 
-template <typename Type_1, typename Type_2>
-bool operator!=(const Type_1 & n, const Rational<Type_2> & o)
-{
-    return !(n == o);
-    // return o != n;
-}
+// template <typename Type_1, typename Type_2>
+// bool operator!=(const Type_1 & n, const Rational<Type_2> & o)
+// {
+//     return !(n == o);
+//     // return o != n;
+// }
 
 #endif /* RATIONAL_H_ */

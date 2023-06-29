@@ -284,9 +284,13 @@ Matrix<C, T> Matrix<C, T>::reduction() const
         {
             tempFactor = temp[k][i];
 
-            for (j = i; j < size && tempFactor != 0
-				&& temp[i][i] != 0
-				&& temp[i][j] != 0; ++j)
+            for (j = i;
+                j < size
+                && tempFactor != (C)0
+				// && temp[i][i] != 0
+				// && temp[i][j] != 0
+                ;
+                ++j)
             {
                 temp[k][j] -= temp[i][j]
 							* tempFactor
