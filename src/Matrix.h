@@ -230,8 +230,8 @@ Matrix<C, T> Matrix<C, T>::complement() const
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::transpose() const
 {
-    size_t rows = cols();
-    size_t cols = rows();
+    size_t rows = Matrix::cols();
+    size_t cols = Matrix::rows();
     Matrix transposeMatrix(rows, cols);
 
     for (size_t row = 0; row < rows; row++)
@@ -352,12 +352,12 @@ Rational<long> Matrix<C, T>::determinant() const
 template <typename C, template<typename> class T>
 Matrix<C, T> Matrix<C, T>::cofactor() const
 {
-    if (size() == 0)
+    if (Matrix::size() == 0)
         return Matrix();
 
 	int rowCoeff = 1;
 	int colCoeff = 1;
-	size_t size = size();
+	size_t size = Matrix::size();
 	Matrix cofactorMatrix = square(size);
 
 	for (size_t row = 0; row < size; row++)
