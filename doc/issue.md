@@ -33,7 +33,7 @@
         ```cpp
         // ...
         std::fstream file;
-        file.open(ExePath() + std::wstring("../../../../test/res/int_matrix_001.txt");
+        file.open(ExePath() + std::wstring(L"../../../../test/res/int_matrix_001.txt");
         ```
 
 - [x] 2023_06_22_233725
