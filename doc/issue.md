@@ -1,5 +1,41 @@
 # issue
 
+- [x] 2023_07_03_220628
+  - system
+    - Visual Studio
+  - c++
+    ```cpp
+    file.open("./res/int_matrix_001.txt");
+    ```
+  - actual
+    - Binding ``file`` returns false; nothing read from file.
+  - howto
+    1. goto
+      1. Project Properties
+      2. General
+    2. save or change **Output Directory**
+    3. c++
+      - header
+        ```cpp
+        // ...
+        #include <windows.h>
+        #include <string>
+        #include <iostream>
+
+        std::wstring ExePath() {
+            TCHAR buffer[MAX_PATH] = { 0 };
+            GetModuleFileName(NULL, buffer, MAX_PATH);
+            std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+            return std::wstring(buffer).substr(0, pos);
+        }
+        ```
+      - source
+        ```cpp
+        // ...
+        std::fstream file;
+        file.open(ExePath() + std::wstring("../../../../test/res/int_matrix_001.txt");
+        ```
+
 - [x] 2023_06_22_233725
   - system
     - Visual Studio
@@ -11,10 +47,10 @@
     ```
   - howto
     1. goto
-        1. Project Properties
-        2. C/C++
-        3. Precompiled Headers
-        4. Precompiled Header File
+      1. Project Properties
+      2. C/C++
+      3. Precompiled Headers
+      4. Precompiled Header File
     2. set **Not Using Precompiled Headers**
   - link
     - url: https://stackoverflow.com/questions/8862840/unexpected-end-of-file-error
@@ -33,10 +69,10 @@
     ```
   - howto
     1. goto
-       1. Project Properties
-       2. C/C++
-       3. Preprocessor
-       4. Preprocessor Definitions
+      1. Project Properties
+      2. C/C++
+      3. Preprocessor
+      4. Preprocessor Definitions
     2. add ``_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING``
   - link
     - url: https://stackoverflow.com/questions/48091421/vs-2017-command-line-error-d8004

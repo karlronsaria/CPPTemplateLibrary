@@ -12,37 +12,23 @@
 
 namespace alg
 {
-	int      sign (int      value);
-	long int sign (long int value);
-	int      sign (float    value);
+	int      sign (int);
+	long int sign (long int);
+	int      sign (float);
 
-	/*
-	karlr (2023_05_06)
-	- rename from `smallest_size`
-	*/
-	size_t min (size_t size1, size_t size2);
-
-	/*
-	karlr (2023_05_06)
-	- rename from `largest_size`
-	*/
-	size_t max (size_t size1, size_t size2);
+	size_t min (size_t, size_t);
+	size_t max (size_t, size_t);
 
 	template<typename Data>
-	Data abs(Data value);
+	Data abs(Data);
 
-	long double abs_long_d(long double value);
+	long double abs_long_d(long double);
 }
 
 template<typename Data>
 Data alg::abs(Data value)
 {
-	if(value < 0)
-	{
-		value = -value;
-	}
-
-	return value;
+	return value < (Data)0 ? -value : value;
 }
 
 #endif /* ALGEBRA_H_ */

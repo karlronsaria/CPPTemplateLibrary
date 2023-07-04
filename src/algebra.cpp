@@ -9,34 +9,12 @@ template long double alg::abs<long double>(long double);
 
 int alg::sign(int value)
 {
-	int unit;
-
-	if(value >= 0)
-	{
-		unit = 1;
-	}
-	else
-	{
-		unit = -1;
-	}
-
-	return unit;
+	return value >= 0 ? 1 : -1;
 }
 
 long int alg::sign(long int value)
 {
-	long int unit;
-
-	if(value >= 0)
-	{
-		unit = 1;
-	}
-	else
-	{
-		unit = -1;
-	}
-
-	return unit;
+	return value >= 0 ? 1L : -1L;
 }
 
 int alg::sign(float value)
@@ -46,34 +24,15 @@ int alg::sign(float value)
 
 size_t alg::min(size_t size1, size_t size2)
 {
-	size_t smallest = size1;
-
-	if(size2 < size1)
-	{
-		smallest = size2;
-	}
-
-	return smallest;
+	return size2 < size1 ? size2 : size1;
 }
 
 size_t alg::max(size_t size1, size_t size2)
 {
-	size_t largest = size1;
-
-	if(size2 > size1)
-	{
-		largest = size2;
-	}
-
-	return largest;
+	return size2 > size1 ? size2 : size1;
 }
 
 long double alg::abs_long_d(long double value)
 {
-	if(value < 0)
-	{
-		value = -value;
-	}
-
-	return value;
+	return value < 0 ? -value : value;
 }
