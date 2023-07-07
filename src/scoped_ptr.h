@@ -36,10 +36,10 @@ class scoped_ptr/*: public safe_bool<>*/
          *************************************/
 
         scoped_ptr ();
-        scoped_ptr (Data             * pointer, bool isAggregate = false);
+        scoped_ptr (Data* pointer, bool isAggregate = false);
         scoped_ptr (const scoped_ptr & object);
         scoped_ptr (std::initializer_list<Data> list);
-       ~scoped_ptr ();
+        virtual ~scoped_ptr ();
 
         /**************************
          * --- Public Methods --- *
