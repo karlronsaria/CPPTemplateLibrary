@@ -9,6 +9,7 @@ class scoped_ptr/*: public safe_bool<>*/
 {
     private:
 
+        bool _isAggregate;
         Data * _data_pointer;
 
         /***********************************
@@ -35,7 +36,7 @@ class scoped_ptr/*: public safe_bool<>*/
          *************************************/
 
         scoped_ptr ();
-        scoped_ptr (Data             * pointer);
+        scoped_ptr (Data             * pointer, bool isAggregate = false);
         scoped_ptr (const scoped_ptr & object);
         scoped_ptr (std::initializer_list<Data> list);
        ~scoped_ptr ();
@@ -58,7 +59,6 @@ class scoped_ptr/*: public safe_bool<>*/
         void       reallocate (const Data & input);
         void       avert      ();
         void       assign     (const scoped_ptr & object);
-        void       reset      ();
         void       swap       (scoped_ptr & object);
 
         /********************************
@@ -212,12 +212,6 @@ template<typename Type>
 void avert(scoped_ptr<Type> & object)
 {
     object.avert();
-}
-
-template<typename Type>
-void reset(scoped_ptr<Type> & object)
-{
-    object.reset();
 }
 
 template<typename Type>
@@ -487,25 +481,35 @@ scoped_ptr<Data>::locator::operator Data () const
  *************************************/
 
 template<typename Data>
-scoped_ptr<Data>::scoped_ptr():
+scoped_ptr<Data>::scoped_ptr() :
+    _isAggregate(false),
     _data_pointer(NULL) {}
 
 template<typename Data>
-scoped_ptr<Data>::scoped_ptr(Data * pointer):
+scoped_ptr<Data>::scoped_ptr(Data * pointer, bool isAggregate):
+    _isAggregate(isAggregate),
     _data_pointer(pointer) {}
 
 template<typename Data>
-scoped_ptr<Data>::scoped_ptr(const scoped_ptr & object) { copy(object); }
+scoped_ptr<Data>::scoped_ptr(const scoped_ptr & object):
+    _isAggregate(object._isAggregate)
+{
+    copy(object);
+}
 
 template<typename Data>
 scoped_ptr<Data>::scoped_ptr(std::initializer_list<Data> list):
+    _isAggregate(true),
     _data_pointer(new Data[list.size()])
 {
     std::copy(list.begin(), list.end(), _data_pointer);
 }
 
 template<typename Data>
-scoped_ptr<Data>::~scoped_ptr() { if(_data_pointer) delete [] _data_pointer; }
+scoped_ptr<Data>::~scoped_ptr()
+{
+    deallocate();
+}
 
 
 /**************************
@@ -554,50 +558,48 @@ typename scoped_ptr<Data>::locator scoped_ptr<Data>::pointer() const
 template<typename Data>
 void scoped_ptr<Data>::copy(const scoped_ptr & object)
 {
-    if(_data_pointer)
-    {
+    if (_data_pointer)
         deallocate();
-    }
 
-    if(object._data_pointer)
-    {
-        _data_pointer = new Data(*(object._data_pointer));
-    }
-    else
-    {
-        _data_pointer = NULL;
-    }
+    _data_pointer = object._data_pointer
+        ? new Data(*(object._data_pointer))
+        : NULL;
 }
 
 template<typename Data>
 void scoped_ptr<Data>::deallocate()
 {
-    if(_data_pointer)
-    {
-        delete [] _data_pointer;
+    if (!_data_pointer)
+        return;
 
-        _data_pointer = NULL;
-    }
+    if (_isAggregate)
+        delete[] _data_pointer;
+    else
+        delete _data_pointer;
+
+	_data_pointer = NULL;
 }
 
 template<typename Data>
 void scoped_ptr<Data>::reallocate()
 {
-     deallocate();
-
-    _data_pointer  = new Data;
+    deallocate();
+    _data_pointer = new Data;
 }
 
 template<typename Data>
 void scoped_ptr<Data>::reallocate(const Data & input)
 {
-     deallocate();
-
-    _data_pointer  = new Data(input);
+    deallocate();
+    _data_pointer = new Data(input);
 }
 
 template<typename Data>
-void scoped_ptr<Data>::avert() { if(_data_pointer) _data_pointer = NULL; }
+void scoped_ptr<Data>::avert()
+{
+    if (_data_pointer)
+        _data_pointer = NULL;
+}
 
 template<typename Data>
 void scoped_ptr<Data>::assign(const scoped_ptr & object)
@@ -606,21 +608,11 @@ void scoped_ptr<Data>::assign(const scoped_ptr & object)
 }
 
 template<typename Data>
-void scoped_ptr<Data>::reset()
-{
-    if(_data_pointer)
-    {
-        delete _data_pointer;
-        _data_pointer = NULL;
-    }
-}
-
-template<typename Data>
 void scoped_ptr<Data>::swap(scoped_ptr & object)
 {
-    Data *          temp   =          _data_pointer;
-           _data_pointer   =   object._data_pointer;
-    object._data_pointer   =                   temp;
+    Data * temp = _data_pointer;
+    _data_pointer = object._data_pointer;
+    object._data_pointer = temp;
 }
 
 
@@ -631,48 +623,46 @@ void scoped_ptr<Data>::swap(scoped_ptr & object)
 // Assignment
 
 template<typename Data>
-scoped_ptr<Data> & scoped_ptr<Data>::operator= (Data * pointer)
+scoped_ptr<Data> & scoped_ptr<Data>::operator=(Data * pointer)
 {
-    if(_data_pointer != pointer)
-    {
+    if (_data_pointer != pointer)
         _data_pointer = pointer;
-    }
 
     return *this;
 }
 
 template<typename Data>
-scoped_ptr<Data> & scoped_ptr<Data>::operator= (const scoped_ptr & object)
+scoped_ptr<Data> & scoped_ptr<Data>::operator=(const scoped_ptr & object)
 {
+    _isAggregate = object._isAggregate;
     copy(object);
-
     return *this;
 }
 
 // Dereference
 
 template<typename Data>
-Data & scoped_ptr<Data>::operator* ()
+Data & scoped_ptr<Data>::operator*()
 {
     assert(_data_pointer);
     return *_data_pointer;
 }
 
 template<typename Data>
-const Data & scoped_ptr<Data>::operator* () const
+const Data & scoped_ptr<Data>::operator*() const
 {
     assert(_data_pointer);
     return *_data_pointer;
 }
 
 template<typename Data>
-Data * scoped_ptr<Data>::operator-> ()
+Data * scoped_ptr<Data>::operator->()
 {
     return *&_data_pointer;
 }
 
 template<typename Data>
-const Data * scoped_ptr<Data>::operator-> () const
+const Data * scoped_ptr<Data>::operator->() const
 {
     return *&_data_pointer;
 }
@@ -680,19 +670,19 @@ const Data * scoped_ptr<Data>::operator-> () const
 // Comparator
 
 template<typename Data>
-bool scoped_ptr<Data>::operator== (const Data * & pointer) const
+bool scoped_ptr<Data>::operator==(const Data * & pointer) const
 {
     return _data_pointer == pointer;
 }
 
 template<typename Data>
-bool scoped_ptr<Data>::operator!= (const Data * & pointer) const
+bool scoped_ptr<Data>::operator!=(const Data * & pointer) const
 {
     return _data_pointer != pointer;
 }
 
 template<typename Data>
-bool scoped_ptr<Data>::operator== (const scoped_ptr & object) const
+bool scoped_ptr<Data>::operator==(const scoped_ptr & object) const
 {
     return _data_pointer == object._data_pointer;
 }
@@ -700,13 +690,13 @@ bool scoped_ptr<Data>::operator== (const scoped_ptr & object) const
 // Typecast Conversion
 
 template<typename Data>
-scoped_ptr<Data>::operator Data * () const
+scoped_ptr<Data>::operator Data*() const
 {
     return _data_pointer;
 }
 
 template<typename Data>
-scoped_ptr<Data>::operator Data () const
+scoped_ptr<Data>::operator Data() const
 {
     return *_data_pointer;
 }
@@ -715,18 +705,16 @@ scoped_ptr<Data>::operator Data () const
 
 template<typename Data>
 const typename scoped_ptr<Data>::locator
-scoped_ptr<Data>::operator+ (int index) const
+scoped_ptr<Data>::operator+(int index) const
 {
     locator temp(*this);
-
     temp._data_pointer = temp._data_pointer + index;
-
     return temp;
 }
 
 template<typename Data>
 const typename scoped_ptr<Data>::locator
-scoped_ptr<Data>::operator- (int index) const
+scoped_ptr<Data>::operator-(int index) const
 {
     return *this + -index;
 }
