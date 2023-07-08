@@ -54,6 +54,10 @@ private:
             delete _right;
         }
 
+        Node& operator=(const Node& other) {
+            return *this = Node(other);
+        }
+
         int find(const T& needle, Node*& parent) {
             switch (Order_Relation(needle, _payload)) {
             case 0:
@@ -109,8 +113,18 @@ public:
         _root(nullptr),
         _size(0) {}
 
-    SortedSet(const SortedSet&) = default;
-    virtual ~SortedSet() = default;
+    SortedSet(const SortedSet& other):
+        _root(new Node(other._root)),
+        _size(other._size) {}
+
+    virtual ~SortedSet() {
+        delete _root;
+    }
+
+    SortedSet& operator=(const SortedSet& other) {
+        return *this = SortedSet(other);
+    }
+
     size_t size() const { return _size; }
     bool any() const { return _size > 0; }
 
