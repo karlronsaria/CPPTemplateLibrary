@@ -30,16 +30,19 @@ private:
     class Node {
     public:
         T _payload;
+        int _factor;
         Node* _left;
         Node* _right;
 
         Node(const T& payload):
             _payload(payload),
+            _factor(0),
             _left(nullptr),
             _right(nullptr) {}
 
         Node(const Node& other):
             _payload(other._payload),
+            _factor(other._factor),
             _left(other._left
                 ? new Node(other._payload)
                 : nullptr
@@ -58,8 +61,15 @@ private:
             return *this = Node(other);
         }
 
-        int find(const T& needle, Node*& parent) {
-            switch (Order_Relation(needle, _payload)) {
+        int find(
+            const T& needle,
+            Node*& parent,
+            void (*forEach)(Node*, int) = [](Node* n, int o) {}
+        ) {
+            int order = Order_Relation(needle, _payload);
+            forEach(parent, order);
+
+            switch (order) {
             case 0:
                 return 0;
             case -1:
@@ -67,13 +77,13 @@ private:
                     return -1;
 
                 parent = _left;
-                return _left->find(needle, parent);
+                return _left->find(needle, parent, forEach);
             default:
                 if (!_right)
                     return 1;
 
                 parent = _right;
-                return _right->find(needle, parent);
+                return _right->find(needle, parent, forEach);
             }
         }
 
@@ -129,8 +139,10 @@ public:
     bool any() const { return _size > 0; }
 
     bool contains(const T& needle) const {
+        Node* temp = _root;
+
         return _root
-            ? _root->find(needle, nullptr) == 0
+            ? _root->find(needle, temp) == 0
             : false;
     }
 
