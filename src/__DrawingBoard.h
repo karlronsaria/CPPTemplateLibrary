@@ -1,5 +1,9 @@
 #include "Array.h"
 
+// todo: remove
+#include <functional>
+#include <stack>
+
 class What {
 
 };
@@ -64,7 +68,7 @@ private:
         int find(
             const T& needle,
             Node*& parent,
-            void (*forEach)(Node*, int) = [](Node* n, int o) {}
+            std::function<void(Node*, int)> forEach = std::function<void(Node*, int)>([](Node* n, int o) {})
         ) {
             int order = Order_Relation(needle, _payload);
             forEach(parent, order);
@@ -165,8 +169,19 @@ public:
 
         Node* temp = _root;
 
+        std::stack<Node*> path;
+        std::stack<int> factors;
+
+		// void (*fn)(Node*, int) = [&](Node* n, int o) {
+        // auto fn = [&path, &factors](Node* n, int o) {
+        // auto fn = std::function<void(Node*, int)>([&](Node* n, int o) {
+		std::function<void(Node*, int)> fn([&](Node* n, int o) {
+            path.push(n);
+            factors.push(o);
+        });
+
         // todo: optional duplicates
-        switch (_root->find(needle, temp)) {
+        switch (_root->find(needle, temp, fn)) {
         case 0:
             return false;
         case -1:
@@ -178,6 +193,36 @@ public:
         }
 
         // todo: rebalance
+
+        // todo: remove
+        std::cout
+            << "\nNeedle: " << needle << '\n'
+			<< "Path to root:\n"
+            ;
+
+        while (!path.empty()) {
+            std::cout
+                << '\n'
+                << "\tPayload: " << path.top()->_payload << '\n'
+                << "\tOrder: " << factors.top() << '\n'
+                ;
+
+            path.top()->_factor += factors.top();
+
+            std::cout
+                << "\tFactor: " << path.top()->_factor << '\n'
+                ;
+
+            factors.pop();
+
+            if (!factors.empty() && !path.top()->_factor) {
+                factors.pop();
+                factors.push(0);
+            }
+
+            path.pop();
+        }
+
         return true;
     }
 
