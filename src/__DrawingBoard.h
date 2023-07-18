@@ -122,11 +122,6 @@ private:
     }
 
     static bool push(Node* n, T c, Node*& y) {
-        if (!n) {
-            y = new Node(c);
-            return true;
-        }
-
         int phi = Order_Relation(c, n->_payload);
 
         if (!phi) {
@@ -225,7 +220,14 @@ public:
     }
 
     bool push(const T& needle) {
-        bool success = push(_root, needle, _root);
+        bool success = false;
+
+        if (!any()) {
+            _root = new Node(needle);
+            success = true;
+        }
+
+        success = success || push(_root, needle, _root);
 
         if (success)
             _size++;
