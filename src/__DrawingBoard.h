@@ -44,19 +44,19 @@ private:
         Node(const T& payload):
             _payload(payload),
             _factor(0),
-            _children({nullptr, nullptr}) {}
+            _children{nullptr, nullptr} {}
 
         Node(const Node& other):
             _payload(other._payload),
             _factor(other._factor),
-            _children({
+            _children{
                 other._children[0]
                     ? new Node(other._payload)
                     : nullptr,
                 other._children[1]
                     ? new Node(other._payload)
                     : nullptr
-            }) {}
+            } {}
 
         virtual ~Node() = default;
 
@@ -64,7 +64,11 @@ private:
             return *this = Node(other);
         }
 
-        Node* child(int ordering) void {
+        const Node*& child(int ordering) const {
+            return _children[h(ordering)];
+        }
+
+        Node*& child(int ordering) {
             return _children[h(ordering)];
         }
 
@@ -101,14 +105,14 @@ private:
 
     static Node* rotate(Node* in, int order) {
         Node* out = in->child(order);
-        in->child(-order) = out->child(-order);
+        in->child(order) = out->child(-order);
         out->child(-order) = in;
         in->_factor = out->_factor = 0;
         return out;
     }
 
     static Node* rotate(Node* in, int alph, int beta) {
-        if (a != b)
+        if (alph != beta)
             in->child(alph) = rotate(
                 in->child(alph)->child(beta),
                 beta
@@ -123,7 +127,7 @@ private:
             return true;
         }
 
-        int phi = Order_Relation(n->_payload, c);
+        int phi = Order_Relation(c, n->_payload);
 
         if (!phi) {
             y = n;
@@ -137,16 +141,17 @@ private:
             return true;
         }
 
-        bool b = push(n->child(phi), c, y);
+        int factor = n->child(phi)->_factor;
 
-        if (!b) {
+        if (!push(n->child(phi), c, y)) {
             y = n;
             return false;
         }
 
         n->child(phi) = y;
 
-        if (y->_factor) {
+        if (!n->_factor || !y->_factor || y->_factor == factor) {
+            n->_factor += phi;
             y = n;
             return true;
         }
@@ -154,7 +159,7 @@ private:
         y = rotate(n, phi, y->_factor);
     }
 
-    Node* _top() const {
+    Node* top() const {
         Node* cursor = _root;
 
         while (cursor->_children[0])
@@ -163,7 +168,7 @@ private:
         return cursor;
     }
 
-    Node* _bot() const {
+    Node* bot() const {
         Node* cursor = _root;
 
         while (cursor->_children[1])
@@ -176,9 +181,8 @@ private:
     size_t _size;
 
     static void dealloc(Node* node) {
-        if (!node) {
+        if (!node)
             return;
-        }
 
         dealloc(node->_children[0]);
         dealloc(node->_children[1]);
@@ -216,14 +220,14 @@ public:
         if (!any())
             return false;
 
-        item = _top()->_payload;
+        item = top()->_payload;
         return true;
     }
 
     bool push(const T& needle) {
         bool success = push(_root, needle, _root);
 
-        if success;
+        if (success)
             _size++;
 
         return success;
