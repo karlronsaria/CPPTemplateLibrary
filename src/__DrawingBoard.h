@@ -31,82 +31,134 @@ template <
     >
 class SortedSet {
 private:
+    static int h(int ordering) {
+        return (ordering + 1) >> 1;
+    }
+
     class Node {
     public:
         T _payload;
         int _factor;
-        Node* _left;
-        Node* _right;
+        Node* _children[2];
 
         Node(const T& payload):
             _payload(payload),
             _factor(0),
-            _left(nullptr),
-            _right(nullptr) {}
+            _children({nullptr, nullptr}) {}
 
         Node(const Node& other):
             _payload(other._payload),
             _factor(other._factor),
-            _left(other._left
-                ? new Node(other._payload)
-                : nullptr
-            ),
-            _right(other._right
-                ? new Node(other._payload)
-                : nullptr
-            ) {}
+            _children({
+                other._children[0]
+                    ? new Node(other._payload)
+                    : nullptr,
+                other._children[1]
+                    ? new Node(other._payload)
+                    : nullptr
+            }) {}
 
-        ~Node() {
-            delete _left;
-            delete _right;
-        }
+        virtual ~Node() = default;
 
         Node& operator=(const Node& other) {
             return *this = Node(other);
         }
 
+        Node* child(int ordering) void {
+            return _children[h(ordering)];
+        }
+
         int find(
             const T& needle,
             Node*& parent,
-            std::function<void(Node*, int)> forEach = std::function<void(Node*, int)>([](Node* n, int o) {})
+            std::function<void(Node*, int)> forEach
+                = std::function<void(Node*, int)>([](Node* n, int o) {})
         ) {
             int order = Order_Relation(needle, _payload);
             forEach(parent, order);
 
-            switch (order) {
-            case 0:
+            if (!order)
                 return 0;
-            case -1:
-                if (!_left)
-                    return -1;
 
-                parent = _left;
-                return _left->find(needle, parent, forEach);
-            default:
-                if (!_right)
-                    return 1;
+            Node* n = child(order);
 
-                parent = _right;
-                return _right->find(needle, parent, forEach);
-            }
+            if (!n)
+                return order;
+
+            return n->find(needle, parent, forEach);
         }
 
         void for_each(void (*doThis)(const T&)) {
-            if (_left)
-                _left->for_each(doThis);
+            if (_children[0])
+                _children[0]->for_each(doThis);
 
             doThis(_payload);
 
-            if (_right)
-                _right->for_each(doThis);
+            if (_children[1])
+                _children[1]->for_each(doThis);
         }
     };
+
+    static Node* rotate(Node* in, int order) {
+        Node* out = in->child(order);
+        in->child(-order) = out->child(-order);
+        out->child(-order) = in;
+        in->_factor = out->_factor = 0;
+        return out;
+    }
+
+    static Node* rotate(Node* in, int alph, int beta) {
+        if (a != b)
+            in->child(alph) = rotate(
+                in->child(alph)->child(beta),
+                beta
+            );
+
+        return rotate(in, alph);
+    }
+
+    static bool push(Node* n, T c, Node*& y) {
+        if (!n) {
+            y = new Node(c);
+            return true;
+        }
+
+        int phi = Order_Relation(n->_payload, c);
+
+        if (!phi) {
+            y = n;
+            return false;
+        }
+
+        if (!n->child(phi)) {
+            n->child(phi) = new Node(c);
+            n->_factor += phi;
+            y = n;
+            return true;
+        }
+
+        bool b = push(n->child(phi), c, y);
+
+        if (!b) {
+            y = n;
+            return false;
+        }
+
+        n->child(phi) = y;
+
+        if (y->_factor) {
+            y = n;
+            return true;
+        }
+
+        y = rotate(n, phi, y->_factor);
+    }
 
     Node* _top() const {
         Node* cursor = _root;
 
-        while (cursor->_left)
-            cursor = cursor->_left;
+        while (cursor->_children[0])
+            cursor = cursor->_children[0];
 
         return cursor;
     }
@@ -114,14 +166,24 @@ private:
     Node* _bot() const {
         Node* cursor = _root;
 
-        while (cursor->_right)
-            cursor = cursor->_right;
+        while (cursor->_children[1])
+            cursor = cursor->_children[1];
 
         return cursor;
     }
 
     Node* _root;
     size_t _size;
+
+    static void dealloc(Node* node) {
+        if (!node) {
+            return;
+        }
+
+        dealloc(node->_children[0]);
+        dealloc(node->_children[1]);
+        delete node;
+    }
 public:
     SortedSet():
         _root(nullptr),
@@ -132,7 +194,7 @@ public:
         _size(other._size) {}
 
     virtual ~SortedSet() {
-        delete _root;
+        dealloc(_root);
     }
 
     SortedSet& operator=(const SortedSet& other) {
@@ -159,71 +221,69 @@ public:
     }
 
     bool push(const T& needle) {
-        bool hasAny = any();
-        _size++;
+        bool success = push(_root, needle, _root);
 
-        if (!hasAny) {
-            _root = new Node(needle);
-            return true;
-        }
+        if success;
+            _size++;
 
-        Node* temp = _root;
+        return success;
 
-        std::stack<Node*> path;
-        std::stack<int> factors;
+        // if (!any()) {
+        //     _root = new Node(needle);
+        //     _size++;
+        //     return true;
+        // }
 
-		// void (*fn)(Node*, int) = [&](Node* n, int o) {
-        // auto fn = [&path, &factors](Node* n, int o) {
-        // auto fn = std::function<void(Node*, int)>([&](Node* n, int o) {
-		std::function<void(Node*, int)> fn([&](Node* n, int o) {
-            path.push(n);
-            factors.push(o);
-        });
+        // std::stack<Node*> path;
+        // std::stack<int> factors;
 
-        // todo: optional duplicates
-        switch (_root->find(needle, temp, fn)) {
-        case 0:
-            return false;
-        case -1:
-            temp->_left = new Node(needle);
-            break;
-        default:
-            temp->_right = new Node(needle);
-            break;
-        }
+		// auto fn = [&](Node* n, int o) {
+        //     path.push(n);
+        //     factors.push(o);
+        // };
 
-        // todo: rebalance
+        // Node* temp = _root;
 
-        // todo: remove
-        std::cout
-            << "\nNeedle: " << needle << '\n'
-			<< "Path to root:\n"
-            ;
+        // switch (_root->find(needle, temp, fn)) {
+        // case 0:
+        //     return false;
+        // case -1:
+        //     temp->_children[0] = new Node(needle);
+        //     break;
+        // default:
+        //     temp->_children[1] = new Node(needle);
+        //     break;
+        // }
 
-        while (!path.empty()) {
-            std::cout
-                << '\n'
-                << "\tPayload: " << path.top()->_payload << '\n'
-                << "\tOrder: " << factors.top() << '\n'
-                ;
+        // // todo: rebalance
 
-            path.top()->_factor += factors.top();
+        // // todo: remove
+        // std::cout
+        //     << "\nNeedle: " << needle << '\n'
+		// 	<< "Path to root:\n"
+        //     ;
 
-            std::cout
-                << "\tFactor: " << path.top()->_factor << '\n'
-                ;
+        // while (!path.empty()) {
+        //     std::cout
+        //         << '\n'
+        //         << path.size()
+        //         << ' '
+        //         << factors.size()
+        //         << '\n'
+        //         ;
+        //     std::cout
+        //         << '\n'
+        //         << "\tPayload: " << path.top()->_payload << '\n'
+        //         << "\tFactor: " << path.top()->_factor << '\n'
+        //         << "\tOrder: " << factors.top() << '\n'
+        //         ;
 
-            factors.pop();
+        //     path.pop();
+        //     factors.pop();
+        // }
 
-            if (!factors.empty() && !path.top()->_factor) {
-                factors.pop();
-                factors.push(0);
-            }
-
-            path.pop();
-        }
-
-        return true;
+        // _size++;
+        // return true;
     }
 
     void for_each(void (*doThis)(const T&)) const {
@@ -238,18 +298,3 @@ public:
     // bool pop(T& item);
     // bool remove(const T&);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
