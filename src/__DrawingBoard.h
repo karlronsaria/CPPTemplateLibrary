@@ -103,11 +103,16 @@ private:
         }
     };
 
+    static int factor(Node* n) {
+        return (n == nullptr) * n->_factor;
+    }
+
     static Node* rotate(Node* in, int order) {
         Node* out = in->child(order);
         in->child(order) = out->child(-order);
         out->child(-order) = in;
         in->_factor = out->_factor = 0;
+        out->_factor = abs(factor(out->_children[1])) - abs(factor(out->_children[0]));
         return out;
     }
 
