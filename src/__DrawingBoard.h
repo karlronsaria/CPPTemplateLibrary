@@ -121,11 +121,11 @@ private:
     }
 
     static Node* rebalance(Node* n, int phi, int prevFactor) {
-        if (prevFactor && !n->child(phi)->_factor)
-            n->_factor += prevFactor;
+        if (n->child(phi)->_factor - prevFactor == phi)
+            n->_factor += phi;
 
         return abs(n->_factor) > 1
-            ? rotate(n, phi)
+            ? rotate(n, phi, n->child(phi)->_factor)
             : n;
     }
 
@@ -152,39 +152,26 @@ private:
         return rebalance(n, -phi, factor);
     }
 
-    static bool push(Node* n, T c, Node*& y) {
+    static Node* push(Node* n, T c) {
         int phi = Order_Relation(c, n->_payload);
 
-        if (!phi) {
-            y = n;
-            return false;
-        }
+        if (!phi)
+            return nullptr;
 
         if (!n->child(phi)) {
             n->child(phi) = new Node(c);
             n->_factor += phi;
-            y = n;
-            return true;
+            return n;
         }
 
         int factor = n->child(phi)->_factor;
+        Node* y = push(n->child(phi), c);
 
-        if (!push(n->child(phi), c, y)) {
-            y = n;
-            return false;
-        }
+        if (!y)
+            return nullptr;
 
         n->child(phi) = y;
-
-        // the current node has a non-zero factor
-        // 
-        if (!n->_factor || !y->_factor || y->_factor == factor) {
-            n->_factor += phi;
-            y = n;
-            return true;
-        }
-
-        y = rotate(n, phi, y->_factor);
+        return rebalance(n, phi, factor);
     }
 
     Node* top() const {
@@ -253,14 +240,14 @@ public:
     }
 
     bool push(const T& needle) {
-        bool success = false;
+        bool success = !any()
+            && (_root = new Node(needle));
 
-        if (!any()) {
-            _root = new Node(needle);
-            success = true;
-        }
+        Node* newRoot = nullptr;
 
-        success = success || push(_root, needle, _root);
+        success = success
+            || (newRoot = push(_root, needle))
+            && (_root = newRoot);
 
         if (success)
             _size++;
