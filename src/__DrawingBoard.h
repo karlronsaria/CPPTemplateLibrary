@@ -152,6 +152,30 @@ private:
         return rebalance(n, -phi, factor);
     }
 
+    static Node* remove(Node* n, T& c) {
+        if (!n)
+            return nullptr;
+
+        int factor = 0;
+        int phi = Order_Relation(c, n->_payload);
+
+        if (!phi) {
+            factor = SortedSet::factor(n->child(-1));
+            n->child(-1) = replace(n->child(-1), phi, n->_factor);
+        }
+        else {
+            factor = SortedSet::factor(n->child(phi));
+            Node* m = remove(n->child(phi), c);
+
+            if (!m)
+                return nullptr;
+
+            n->child(phi) = m;
+        }
+
+        return rebalance(n, -phi, factor);
+    }
+
     static Node* push(Node* n, T c) {
         int phi = Order_Relation(c, n->_payload);
 
