@@ -13,21 +13,13 @@ int Compare(
     const T & first,
     const T & secnd
 ) {
-    if (first > secnd)
-        return 1;
-
-    if (first < secnd)
-        return -1;
-
-    return 0;
+    return (first > secnd) - (first < secnd);
 }
 
 template <
     typename T,
-    int (*Order_Relation)(
-        const T &,
-        const T &
-    ) = Compare<T>
+    int (*Order_Relation)(const T &, const T &)
+        = Compare<T>
     >
 class SortedSet {
 private:
@@ -112,7 +104,9 @@ private:
         in->child(order) = out->child(-order);
         out->child(-order) = in;
         in->_factor = out->_factor = 0;
-        out->_factor = abs(factor(out->_children[1])) - abs(factor(out->_children[0]));
+        out->_factor
+            = abs(factor(out->_children[1]))
+            - abs(factor(out->_children[0]));
         return out;
     }
 
@@ -124,6 +118,38 @@ private:
             );
 
         return rotate(in, alph);
+    }
+
+    static Node* rebalance(Node* n, int phi, int prevFactor) {
+        if (prevFactor && !n->child(phi)->_factor)
+            n->_factor += prevFactor;
+
+        return abs(n->_factor) > 1
+            ? rotate(n, phi)
+            : n;
+    }
+
+    static Node* replace(Node* n, int phi, T& c) {
+        if (!n->child(phi)) {
+            c = n->_payload;
+
+            if (!n->child(-phi)) {
+                delete n;
+                n = nullptr;
+            }
+            else {
+                n->_payload = n->child(-phi)->_payload;
+                n->_factor = 0;
+                delete n->child(-phi);
+                n->child(-phi) = nullptr;
+            }
+
+            return n;
+        }
+
+        int factor = n->child(-phi)->_factor;
+        n->child(-phi) = replace(n->child(-phi), phi, c);
+        return rebalance(n, -phi, factor);
     }
 
     static bool push(Node* n, T c, Node*& y) {
@@ -150,6 +176,8 @@ private:
 
         n->child(phi) = y;
 
+        // the current node has a non-zero factor
+        // 
         if (!n->_factor || !y->_factor || y->_factor == factor) {
             n->_factor += phi;
             y = n;
@@ -238,63 +266,6 @@ public:
             _size++;
 
         return success;
-
-        // if (!any()) {
-        //     _root = new Node(needle);
-        //     _size++;
-        //     return true;
-        // }
-
-        // std::stack<Node*> path;
-        // std::stack<int> factors;
-
-		// auto fn = [&](Node* n, int o) {
-        //     path.push(n);
-        //     factors.push(o);
-        // };
-
-        // Node* temp = _root;
-
-        // switch (_root->find(needle, temp, fn)) {
-        // case 0:
-        //     return false;
-        // case -1:
-        //     temp->_children[0] = new Node(needle);
-        //     break;
-        // default:
-        //     temp->_children[1] = new Node(needle);
-        //     break;
-        // }
-
-        // // todo: rebalance
-
-        // // todo: remove
-        // std::cout
-        //     << "\nNeedle: " << needle << '\n'
-		// 	<< "Path to root:\n"
-        //     ;
-
-        // while (!path.empty()) {
-        //     std::cout
-        //         << '\n'
-        //         << path.size()
-        //         << ' '
-        //         << factors.size()
-        //         << '\n'
-        //         ;
-        //     std::cout
-        //         << '\n'
-        //         << "\tPayload: " << path.top()->_payload << '\n'
-        //         << "\tFactor: " << path.top()->_factor << '\n'
-        //         << "\tOrder: " << factors.top() << '\n'
-        //         ;
-
-        //     path.pop();
-        //     factors.pop();
-        // }
-
-        // _size++;
-        // return true;
     }
 
     void for_each(void (*doThis)(const T&)) const {
