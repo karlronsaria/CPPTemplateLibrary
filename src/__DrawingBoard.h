@@ -22,6 +22,13 @@ template <
         = Compare<T>
     >
 class SortedSet {
+public:
+    struct NodeInfo
+    {
+        bool any;
+        int factor;
+        T payload;
+    };
 private:
     static int h(int ordering) {
         return (ordering + 1) >> 1;
@@ -182,9 +189,10 @@ private:
         if (!phi)
             return nullptr;
 
+        n->_factor += phi;
+
         if (!n->child(phi)) {
             n->child(phi) = new Node(c);
-            n->_factor += phi;
             return n;
         }
 
@@ -196,6 +204,24 @@ private:
 
         n->child(phi) = y;
         return rebalance(n, phi, factor);
+    }
+
+    static void to_vector(
+        Node* n,
+        int index,
+        std::vector<NodeInfo>& list)
+    {
+        list.resize(2 * (index + 1) + 1);
+
+        if (!n) {
+            list[index] = NodeInfo{false, 0, T()};
+            return;
+        }
+
+        list[index] = NodeInfo{true, n->_factor, n->_payload};
+        index = 2 * (index + 1);
+        to_vector(n->_children[0], index - 1, list);
+        to_vector(n->_children[1], index, list);
     }
 
     Node* top() const {
@@ -286,8 +312,19 @@ public:
         _root->for_each(doThis);
     }
 
+    std::vector<NodeInfo>
+    to_vector() const {
+        std::vector<NodeInfo> list;
+        to_vector(_root, 0, list);
+        return list;
+    }
+
     // // todo
     // bool pop();
     // bool pop(T& item);
     // bool remove(const T&);
 };
+
+
+
+
