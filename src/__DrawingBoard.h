@@ -25,9 +25,9 @@ class SortedSet {
 public:
     struct NodeInfo
     {
-        bool any;
-        int factor;
-        T payload;
+        bool any = false;
+        int factor = 0;
+        T payload = T();
     };
 private:
     static int h(int ordering) {
@@ -91,7 +91,7 @@ private:
             return n->find(needle, parent, forEach);
         }
 
-        void for_each(void (*doThis)(const T&)) {
+		void for_each(std::function<void(const T&)> doThis) {
             if (_children[0])
                 _children[0]->for_each(doThis);
 
@@ -189,10 +189,9 @@ private:
         if (!phi)
             return nullptr;
 
-        n->_factor += phi;
-
         if (!n->child(phi)) {
             n->child(phi) = new Node(c);
+			n->_factor += phi;
             return n;
         }
 
@@ -202,6 +201,7 @@ private:
         if (!y)
             return nullptr;
 
+		n->_factor += phi;
         n->child(phi) = y;
         return rebalance(n, phi, factor);
     }
@@ -305,7 +305,8 @@ public:
         return success;
     }
 
-    void for_each(void (*doThis)(const T&)) const {
+    // void for_each(void (*doThis)(const T&)) const {
+    void for_each(std::function<void(const T&)> doThis) const {
         if (!any())
             return;
 
