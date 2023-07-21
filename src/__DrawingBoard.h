@@ -103,7 +103,7 @@ private:
     };
 
     static int factor(Node* n) {
-        return (n == nullptr) * n->_factor;
+        return n == nullptr ? 0 : n->_factor;
     }
 
     static Node* rotate(Node* in, int order) {
@@ -111,9 +111,6 @@ private:
         in->child(order) = out->child(-order);
         out->child(-order) = in;
         in->_factor = out->_factor = 0;
-        out->_factor
-            = abs(factor(out->_children[1]))
-            - abs(factor(out->_children[0]));
         return out;
     }
 
@@ -127,8 +124,10 @@ private:
         return rotate(in, alph);
     }
 
-    static Node* rebalance(Node* n, int phi, int prevFactor) {
-        if (n->child(phi)->_factor - prevFactor == phi)
+    static Node* rebalance(Node* n, int phi, int prevFactor, bool reverse) {
+        int nextFactor = n->child(phi)->_factor;
+
+        if (!reverse == (bool)(nextFactor && (nextFactor - prevFactor))) // == phi)
             n->_factor += phi;
 
         return abs(n->_factor) > 1
@@ -137,6 +136,9 @@ private:
     }
 
     static Node* replace(Node* n, int phi, T& c) {
+        if (!n)
+            return nullptr;
+
         if (!n->child(phi)) {
             c = n->_payload;
 
@@ -156,31 +158,39 @@ private:
 
         int factor = n->child(-phi)->_factor;
         n->child(-phi) = replace(n->child(-phi), phi, c);
-        return rebalance(n, -phi, factor);
+        return rebalance(n, -phi, factor, true);
     }
 
-    static Node* remove(Node* n, T& c) {
-        if (!n)
-            return nullptr;
+    static bool remove(Node* n, const T& z, Node*& m) {
+        if (!n) {
+            m = nullptr;
+            return false;
+        }
 
         int factor = 0;
-        int phi = Order_Relation(c, n->_payload);
+        int phi = Order_Relation(z, n->_payload);
 
         if (!phi) {
+            if (!n->child(-1)) {
+                delete n;
+                m = nullptr;
+                return true;
+            }
+
             factor = SortedSet::factor(n->child(-1));
-            n->child(-1) = replace(n->child(-1), phi, n->_factor);
+            n->child(-1) = replace(n->child(-1), phi, n->_payload);
         }
         else {
             factor = SortedSet::factor(n->child(phi));
-            Node* m = remove(n->child(phi), c);
 
-            if (!m)
-                return nullptr;
+            if (!remove(n->child(phi), z, m))
+                return false;
 
             n->child(phi) = m;
         }
 
-        return rebalance(n, -phi, factor);
+        m = rebalance(n, -phi, factor, true);
+        return true;
     }
 
     static Node* push(Node* n, T c) {
@@ -191,7 +201,7 @@ private:
 
         if (!n->child(phi)) {
             n->child(phi) = new Node(c);
-			n->_factor += phi;
+            n->_factor += phi;
             return n;
         }
 
@@ -201,9 +211,8 @@ private:
         if (!y)
             return nullptr;
 
-		n->_factor += phi;
         n->child(phi) = y;
-        return rebalance(n, phi, factor);
+        return rebalance(n, phi, factor, false);
     }
 
     static void to_vector(
@@ -305,7 +314,20 @@ public:
         return success;
     }
 
-    // void for_each(void (*doThis)(const T&)) const {
+    bool remove(const T& needle) {
+        if (!_size)
+            return false;
+
+        Node* newRoot = nullptr;
+
+        if (!remove(_root, needle, newRoot))
+            return false;
+
+        _size--;
+        _root = newRoot;
+        return true;
+    }
+
     void for_each(std::function<void(const T&)> doThis) const {
         if (!any())
             return;
