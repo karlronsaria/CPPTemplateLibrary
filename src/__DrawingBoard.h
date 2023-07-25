@@ -151,13 +151,13 @@ namespace avltree {
         typename T,
         int (*R)(const T&, const T&) = Compare<T>
     >
-    Node<T, R>* replace(Node<T, R>* n, int phi, T& c) {
+    Node<T, R>* pop(Node<T, R>* n, int phi, T& c) {
         if (!n)
             return nullptr;
 
         if (n->child(phi)) {
             int factor = avltree::factor(n->child(phi));
-            n->child(phi) = replace(n->child(phi), phi, c);
+            n->child(phi) = pop(n->child(phi), phi, c);
             return rebalance(n, -phi, factor, true);
         }
 
@@ -198,7 +198,7 @@ namespace avltree {
             }
 
             factor = avltree::factor(n->child(lean));
-            n->child(lean) = replace(n->child(lean), -lean, n->_payload);
+            n->child(lean) = pop(n->child(lean), -lean, n->_payload);
         }
         else {
             factor = avltree::factor(n->child(phi));
@@ -248,7 +248,8 @@ namespace avltree {
         int index,
         std::vector<avltree::NodeInfo<T>>& list
     ) {
-        list.resize(2 * (index + 1) + 1);
+        int next = 2 * (index + 1);
+        list.resize(next + 1);
 
         if (!n) {
             list[index] = avltree::NodeInfo<T>{false, 0, T()};
@@ -261,9 +262,8 @@ namespace avltree {
             n->_payload
         };
 
-        index = 2 * (index + 1);
-        to_vector(n->_children[0], index - 1, list);
-        to_vector(n->_children[1], index, list);
+        to_vector(n->_children[0], next - 1, list);
+        to_vector(n->_children[1], next, list);
     }
 }
 
@@ -274,6 +274,8 @@ template <
 class SortedSet {
 private:
     typedef avltree::Node<T, R> N;
+    N* _root;
+    size_t _size;
 
     N* top() const {
         N* cursor = _root;
@@ -292,9 +294,17 @@ private:
 
         return cursor;
     }
+protected:
+    bool at(const T& needle, T& needle) const {
+        N* temp = _root;
 
-    N* _root;
-    size_t _size;
+        if (_root && _root->find(needle, temp)) {
+            needle = temp->_payload;
+            return true;
+        }
+
+        return false;
+    }
 public:
     SortedSet():
         _root(nullptr),
@@ -319,8 +329,7 @@ public:
         N* temp = _root;
 
         return _root
-            ? _root->find(needle, temp) == 0
-            : false;
+            && !_root->find(needle, temp);
     }
 
     bool peek(T& item) const {
@@ -367,7 +376,7 @@ public:
 
         top = _root->_payload;
         int factor = avltree::factor(_root->child(-1));
-        _root->child(-1) = avltree::replace(_root->child(-1), 1, _root->_payload);
+        _root->child(-1) = avltree::pop(_root->child(-1), 1, _root->_payload);
         _root = avltree::rebalance(_root, -1, factor, true);
         return true;
     }
@@ -377,7 +386,7 @@ public:
             return false;
 
         T temp;
-        _root = avltree::replace(_root, -1, temp);
+        _root = avltree::pop(_root, -1, temp);
         return true;
     }
 
@@ -395,3 +404,111 @@ public:
         return list;
     }
 };
+
+template <
+    typename KeyT,
+    typename ValueT,
+    int (*R)(const KeyT&, const KeyT&) = Compare<KeyT>
+>
+class SortedMap {
+private:
+    struct Pair {
+        KeyT key;
+        ValueT value;
+    };
+
+    SortedSet<
+        Pair,
+        [](const Pair& f, const Pair& s) -> int {
+            return R(f.key, s.key);
+        }
+    >
+    _set;
+public:
+    SortedMap() = default;
+    SortedMap(const SortedMap&) = default;
+    virtual ~SortedMap() = default;
+    SortedMap& operator=(const SortedMap&) = default;
+
+    size_t size() const { return _set.size(); }
+    bool any() const { return _set.any(); }
+
+    bool contains(const KeyT& key) const {
+        return _set.contains(Pair{key, ValueT()});
+    }
+
+    bool peek(ValueT& item) const {
+        Pair p;
+
+        if (!_set.peek(p))
+            return false;
+
+        item = p.value;
+        return true;
+    }
+
+    struct Maybe {
+        bool success = false;
+        ValueT value = ValueT();
+    }
+
+    Maybe operator[](const KeyT& key) const {
+        ValueT value;
+        return Maybe{_set.at(Pair{key, value}, value), value};
+    }
+
+    bool push(const KeyT& key, const ValueT& value) {
+        return _set.push(Pair{key, value});
+    }
+
+    bool remove(const KeyT& key, const ValueT& value) {
+        return _set.push(Pair{key, value});
+    }
+
+    bool pop(KeyT& key, ValueT& value) {
+        Pair p;
+
+        if (!_set.pop(p))
+            return false;
+
+        key = p.key;
+        value = p.value;
+        return true;
+    }
+
+    bool pop() {
+        Pair p;
+        return _set.pop(p);
+    }
+
+    void for_each(std::function<void(const KeyT&, const ValueT&)> doThis) const {
+        _set.for_each([&](const Pair& pair) -> void {
+            doThis(pair.key, pair.value)
+        });
+    }
+
+    // // todo
+    // std::vector<avltree::NodeInfo<T>>
+    // to_vector() const {
+    //     std::vector<avltree::NodeInfo<T>> list;
+    //     avltree::to_vector(_root, 0, list);
+    //     return list;
+    // }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
