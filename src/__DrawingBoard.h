@@ -295,11 +295,11 @@ private:
         return cursor;
     }
 protected:
-    bool at(const T& needle, T& needle) const {
+    bool at(const T& needle, T& out) const {
         N* temp = _root;
 
         if (_root && _root->find(needle, temp)) {
-            needle = temp->_payload;
+            out = temp->_payload;
             return true;
         }
 
@@ -450,7 +450,7 @@ public:
     struct Maybe {
         bool success = false;
         ValueT value = ValueT();
-    }
+    };
 
     Maybe operator[](const KeyT& key) const {
         ValueT value;
@@ -483,7 +483,7 @@ public:
 
     void for_each(std::function<void(const KeyT&, const ValueT&)> doThis) const {
         _set.for_each([&](const Pair& pair) -> void {
-            doThis(pair.key, pair.value)
+            doThis(pair.key, pair.value);
         });
     }
 
