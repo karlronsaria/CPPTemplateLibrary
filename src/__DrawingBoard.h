@@ -4,10 +4,6 @@
 #include <functional>
 #include <stack>
 
-class What {
-
-};
-
 template <typename T>
 int Compare(
     const T & first,
@@ -91,7 +87,7 @@ private:
             return n->find(needle, parent, forEach);
         }
 
-		void for_each(std::function<void(const T&)> doThis) {
+        void for_each(std::function<void(const T&)> doThis) {
             if (_children[0])
                 _children[0]->for_each(doThis);
 
@@ -101,6 +97,36 @@ private:
                 _children[1]->for_each(doThis);
         }
     };
+
+    Node* top() const {
+        Node* cursor = _root;
+
+        while (cursor->_children[0])
+            cursor = cursor->_children[0];
+
+        return cursor;
+    }
+
+    Node* bot() const {
+        Node* cursor = _root;
+
+        while (cursor->_children[1])
+            cursor = cursor->_children[1];
+
+        return cursor;
+    }
+
+    Node* _root;
+    size_t _size;
+
+    static void dealloc(Node* node) {
+        if (!node)
+            return;
+
+        dealloc(node->_children[0]);
+        dealloc(node->_children[1]);
+        delete node;
+    }
 
     static int factor(Node* n) {
         return n == nullptr ? 0 : n->_factor;
@@ -125,13 +151,13 @@ private:
     }
 
     static Node* rebalance(Node* n, int phi, int prevFactor, bool reverse) {
-        int nextFactor = n->child(phi)->_factor;
+        int nextFactor = factor(n->child(phi));
 
-        if (!reverse == (bool)(nextFactor && (nextFactor - prevFactor))) // == phi)
+        if (!reverse == (bool)(nextFactor && (nextFactor - prevFactor)))
             n->_factor += phi;
 
         return abs(n->_factor) > 1
-            ? rotate(n, phi, n->child(phi)->_factor)
+            ? rotate(n, phi, nextFactor ? nextFactor : phi)
             : n;
     }
 
@@ -139,26 +165,24 @@ private:
         if (!n)
             return nullptr;
 
-        if (!n->child(phi)) {
-            c = n->_payload;
-
-            if (!n->child(-phi)) {
-                delete n;
-                n = nullptr;
-            }
-            else {
-                n->_payload = n->child(-phi)->_payload;
-                n->_factor = 0;
-                delete n->child(-phi);
-                n->child(-phi) = nullptr;
-            }
-
-            return n;
+        if (n->child(phi)) {
+            int factor = SortedSet::factor(n->child(phi));
+            n->child(phi) = replace(n->child(phi), phi, c);
+            return rebalance(n, -phi, factor, true);
         }
 
-        int factor = n->child(-phi)->_factor;
-        n->child(-phi) = replace(n->child(-phi), phi, c);
-        return rebalance(n, -phi, factor, true);
+		c = n->_payload;
+
+		if (!n->child(-phi)) {
+			delete n;
+            return nullptr;
+		}
+
+		n->_payload = n->child(-phi)->_payload;
+		n->_factor = 0;
+		delete n->child(-phi);
+		n->child(-phi) = nullptr;
+		return n;
     }
 
     static bool remove(Node* n, const T& z, Node*& m) {
@@ -171,14 +195,16 @@ private:
         int phi = Order_Relation(z, n->_payload);
 
         if (!phi) {
-            if (!n->child(-1)) {
+            int lean = -1;
+
+            if (!n->child(lean)) {
                 delete n;
                 m = nullptr;
                 return true;
             }
 
-            factor = SortedSet::factor(n->child(-1));
-            n->child(-1) = replace(n->child(-1), phi, n->_payload);
+            factor = SortedSet::factor(n->child(lean));
+            n->child(lean) = replace(n->child(lean), -lean, n->_payload);
         }
         else {
             factor = SortedSet::factor(n->child(phi));
@@ -218,8 +244,8 @@ private:
     static void to_vector(
         Node* n,
         int index,
-        std::vector<NodeInfo>& list)
-    {
+        std::vector<NodeInfo>& list
+    ) {
         list.resize(2 * (index + 1) + 1);
 
         if (!n) {
@@ -231,36 +257,6 @@ private:
         index = 2 * (index + 1);
         to_vector(n->_children[0], index - 1, list);
         to_vector(n->_children[1], index, list);
-    }
-
-    Node* top() const {
-        Node* cursor = _root;
-
-        while (cursor->_children[0])
-            cursor = cursor->_children[0];
-
-        return cursor;
-    }
-
-    Node* bot() const {
-        Node* cursor = _root;
-
-        while (cursor->_children[1])
-            cursor = cursor->_children[1];
-
-        return cursor;
-    }
-
-    Node* _root;
-    size_t _size;
-
-    static void dealloc(Node* node) {
-        if (!node)
-            return;
-
-        dealloc(node->_children[0]);
-        dealloc(node->_children[1]);
-        delete node;
     }
 public:
     SortedSet():
@@ -328,6 +324,26 @@ public:
         return true;
     }
 
+    bool pop(T& top) {
+        if (!any())
+            return false;
+
+        top = _root->_payload;
+		int factor = SortedSet::factor(_root->child(-1));
+		_root->child(-1) = replace(_root->child(-1), 1, _root->_payload);
+        _root = rebalance(_root, -1, factor, true);
+        return true;
+    }
+
+    bool pop() {
+        if (!any())
+            return false;
+
+        T temp;
+        _root = replace(_root, -1, temp);
+        return true;
+    }
+
     void for_each(std::function<void(const T&)> doThis) const {
         if (!any())
             return;
@@ -341,13 +357,4 @@ public:
         to_vector(_root, 0, list);
         return list;
     }
-
-    // // todo
-    // bool pop();
-    // bool pop(T& item);
-    // bool remove(const T&);
 };
-
-
-
-
