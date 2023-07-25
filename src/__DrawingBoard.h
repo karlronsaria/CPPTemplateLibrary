@@ -6,30 +6,18 @@
 
 template <typename T>
 int Compare(
-    const T & first,
-    const T & secnd
+    const T& first,
+    const T& secnd
 ) {
     return (first > secnd) - (first < secnd);
 }
 
-template <
-    typename T,
-    int (*Order_Relation)(const T &, const T &)
-        = Compare<T>
+namespace avltree {
+    template <
+        typename T,
+        int (*Order_Relation)(const T &, const T &)
+            = Compare<T>
     >
-class SortedSet {
-public:
-    struct NodeInfo
-    {
-        bool any = false;
-        int factor = 0;
-        T payload = T();
-    };
-private:
-    static int h(int ordering) {
-        return (ordering + 1) >> 1;
-    }
-
     class Node {
     public:
         T _payload;
@@ -59,6 +47,10 @@ private:
             return *this = Node(other);
         }
 
+        static int h(int r) {
+            return (r + 1) >> 1;
+        }
+
         const Node*& child(int ordering) const {
             return _children[h(ordering)];
         }
@@ -71,7 +63,9 @@ private:
             const T& needle,
             Node*& parent,
             std::function<void(Node*, int)> forEach
-                = std::function<void(Node*, int)>([](Node* n, int o) {})
+                = std::function<void(Node*, int)>(
+                    [](Node* n, int o) {}
+                )
         ) {
             int order = Order_Relation(needle, _payload);
             forEach(parent, order);
@@ -98,28 +92,16 @@ private:
         }
     };
 
-    Node* top() const {
-        Node* cursor = _root;
+    template <typename T>
+    struct NodeInfo
+    {
+        bool any = false;
+        int factor = 0;
+        T payload = T();
+    };
 
-        while (cursor->_children[0])
-            cursor = cursor->_children[0];
-
-        return cursor;
-    }
-
-    Node* bot() const {
-        Node* cursor = _root;
-
-        while (cursor->_children[1])
-            cursor = cursor->_children[1];
-
-        return cursor;
-    }
-
-    Node* _root;
-    size_t _size;
-
-    static void dealloc(Node* node) {
+    template <typename N>
+    void dealloc(N* node) {
         if (!node)
             return;
 
@@ -128,19 +110,22 @@ private:
         delete node;
     }
 
-    static int factor(Node* n) {
+    template <typename N>
+    int factor(N* n) {
         return n == nullptr ? 0 : n->_factor;
     }
 
-    static Node* rotate(Node* in, int order) {
-        Node* out = in->child(order);
+    template <typename N>
+    N* rotate(N* in, int order) {
+        N* out = in->child(order);
         in->child(order) = out->child(-order);
         out->child(-order) = in;
         in->_factor = out->_factor = 0;
         return out;
     }
 
-    static Node* rotate(Node* in, int alph, int beta) {
+    template <typename N>
+    N* rotate(N* in, int alph, int beta) {
         if (alph != beta)
             in->child(alph) = rotate(
                 in->child(alph)->child(beta),
@@ -150,7 +135,8 @@ private:
         return rotate(in, alph);
     }
 
-    static Node* rebalance(Node* n, int phi, int prevFactor, bool reverse) {
+    template <typename N>
+    N* rebalance(N* n, int phi, int prevFactor, bool reverse) {
         int nextFactor = factor(n->child(phi));
 
         if (!reverse == (bool)(nextFactor && (nextFactor - prevFactor)))
@@ -161,38 +147,46 @@ private:
             : n;
     }
 
-    static Node* replace(Node* n, int phi, T& c) {
+    template <
+        typename T,
+        int (*R)(const T&, const T&) = Compare<T>
+    >
+    Node<T, R>* replace(Node<T, R>* n, int phi, T& c) {
         if (!n)
             return nullptr;
 
         if (n->child(phi)) {
-            int factor = SortedSet::factor(n->child(phi));
+            int factor = avltree::factor(n->child(phi));
             n->child(phi) = replace(n->child(phi), phi, c);
             return rebalance(n, -phi, factor, true);
         }
 
-		c = n->_payload;
+        c = n->_payload;
 
-		if (!n->child(-phi)) {
-			delete n;
+        if (!n->child(-phi)) {
+            delete n;
             return nullptr;
-		}
+        }
 
-		n->_payload = n->child(-phi)->_payload;
-		n->_factor = 0;
-		delete n->child(-phi);
-		n->child(-phi) = nullptr;
-		return n;
+        n->_payload = n->child(-phi)->_payload;
+        n->_factor = 0;
+        delete n->child(-phi);
+        n->child(-phi) = nullptr;
+        return n;
     }
 
-    static bool remove(Node* n, const T& z, Node*& m) {
+    template <
+        typename T,
+        int (*R)(const T&, const T&) = Compare<T>
+    >
+    bool remove(Node<T, R>* n, const T& z, Node<T, R>*& m) {
         if (!n) {
             m = nullptr;
             return false;
         }
 
         int factor = 0;
-        int phi = Order_Relation(z, n->_payload);
+        int phi = R(z, n->_payload);
 
         if (!phi) {
             int lean = -1;
@@ -203,11 +197,11 @@ private:
                 return true;
             }
 
-            factor = SortedSet::factor(n->child(lean));
+            factor = avltree::factor(n->child(lean));
             n->child(lean) = replace(n->child(lean), -lean, n->_payload);
         }
         else {
-            factor = SortedSet::factor(n->child(phi));
+            factor = avltree::factor(n->child(phi));
 
             if (!remove(n->child(phi), z, m))
                 return false;
@@ -219,20 +213,24 @@ private:
         return true;
     }
 
-    static Node* push(Node* n, T c) {
-        int phi = Order_Relation(c, n->_payload);
+    template <
+        typename T,
+        int (*R)(const T&, const T&) = Compare<T>
+    >
+    Node<T, R>* push(Node<T, R>* n, T c) {
+        int phi = R(c, n->_payload);
 
         if (!phi)
             return nullptr;
 
         if (!n->child(phi)) {
-            n->child(phi) = new Node(c);
+            n->child(phi) = new Node<T, R>(c);
             n->_factor += phi;
             return n;
         }
 
         int factor = n->child(phi)->_factor;
-        Node* y = push(n->child(phi), c);
+        Node<T, R>* y = push(n->child(phi), c);
 
         if (!y)
             return nullptr;
@@ -241,34 +239,73 @@ private:
         return rebalance(n, phi, factor, false);
     }
 
-    static void to_vector(
-        Node* n,
+    template <
+        typename T,
+        int (*R)(const T&, const T&) = Compare<T>
+    >
+    void to_vector(
+        Node<T, R>* n,
         int index,
-        std::vector<NodeInfo>& list
+        std::vector<avltree::NodeInfo<T>>& list
     ) {
         list.resize(2 * (index + 1) + 1);
 
         if (!n) {
-            list[index] = NodeInfo{false, 0, T()};
+            list[index] = avltree::NodeInfo<T>{false, 0, T()};
             return;
         }
 
-        list[index] = NodeInfo{true, n->_factor, n->_payload};
+        list[index] = avltree::NodeInfo<T>{
+            true,
+            n->_factor,
+            n->_payload
+        };
+
         index = 2 * (index + 1);
         to_vector(n->_children[0], index - 1, list);
         to_vector(n->_children[1], index, list);
     }
+}
+
+template <
+    typename T,
+    int (*R)(const T&, const T&) = Compare<T>
+>
+class SortedSet {
+private:
+    typedef avltree::Node<T, R> N;
+
+    N* top() const {
+        N* cursor = _root;
+
+        while (cursor->_children[0])
+            cursor = cursor->_children[0];
+
+        return cursor;
+    }
+
+    N* bot() const {
+        N* cursor = _root;
+
+        while (cursor->_children[1])
+            cursor = cursor->_children[1];
+
+        return cursor;
+    }
+
+    N* _root;
+    size_t _size;
 public:
     SortedSet():
         _root(nullptr),
         _size(0) {}
 
     SortedSet(const SortedSet& other):
-        _root(new Node(other._root)),
+        _root(new N(other._root)),
         _size(other._size) {}
 
     virtual ~SortedSet() {
-        dealloc(_root);
+        avltree::dealloc(_root);
     }
 
     SortedSet& operator=(const SortedSet& other) {
@@ -279,7 +316,7 @@ public:
     bool any() const { return _size > 0; }
 
     bool contains(const T& needle) const {
-        Node* temp = _root;
+        N* temp = _root;
 
         return _root
             ? _root->find(needle, temp) == 0
@@ -296,12 +333,12 @@ public:
 
     bool push(const T& needle) {
         bool success = !any()
-            && (_root = new Node(needle));
+            && (_root = new N(needle));
 
-        Node* newRoot = nullptr;
+        N* newRoot = nullptr;
 
         success = success
-            || (newRoot = push(_root, needle))
+            || (newRoot = avltree::push(_root, needle))
             && (_root = newRoot);
 
         if (success)
@@ -314,9 +351,9 @@ public:
         if (!_size)
             return false;
 
-        Node* newRoot = nullptr;
+        N* newRoot = nullptr;
 
-        if (!remove(_root, needle, newRoot))
+        if (!avltree::remove(_root, needle, newRoot))
             return false;
 
         _size--;
@@ -329,9 +366,9 @@ public:
             return false;
 
         top = _root->_payload;
-		int factor = SortedSet::factor(_root->child(-1));
-		_root->child(-1) = replace(_root->child(-1), 1, _root->_payload);
-        _root = rebalance(_root, -1, factor, true);
+        int factor = avltree::factor(_root->child(-1));
+        _root->child(-1) = avltree::replace(_root->child(-1), 1, _root->_payload);
+        _root = avltree::rebalance(_root, -1, factor, true);
         return true;
     }
 
@@ -340,7 +377,7 @@ public:
             return false;
 
         T temp;
-        _root = replace(_root, -1, temp);
+        _root = avltree::replace(_root, -1, temp);
         return true;
     }
 
@@ -351,10 +388,10 @@ public:
         _root->for_each(doThis);
     }
 
-    std::vector<NodeInfo>
+    std::vector<avltree::NodeInfo<T>>
     to_vector() const {
-        std::vector<NodeInfo> list;
-        to_vector(_root, 0, list);
+        std::vector<avltree::NodeInfo<T>> list;
+        avltree::to_vector(_root, 0, list);
         return list;
     }
 };
