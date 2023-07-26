@@ -128,7 +128,7 @@ namespace avltree {
     N* rotate(N* in, int alph, int beta) {
         if (alph != beta)
             in->child(alph) = rotate(
-                in->child(alph)->child(beta),
+                in->child(alph),
                 beta
             );
 
@@ -294,7 +294,7 @@ private:
 
         return cursor;
     }
-protected:
+public:
     bool at(const T& needle, T& out) const {
         N* temp = _root;
 
@@ -305,7 +305,7 @@ protected:
 
         return false;
     }
-public:
+
     SortedSet():
         _root(nullptr),
         _size(0) {}
@@ -453,8 +453,11 @@ public:
     };
 
     Maybe operator[](const KeyT& key) const {
-        ValueT value;
-        return Maybe{_set.at(Pair{key, value}, value), value};
+        Pair p1 = Pair{ key, ValueT() };
+        Pair p2;
+        bool success = _set.at(p1, p2);
+        Maybe maybe = Maybe{ success, p2.value };
+        return maybe;
     }
 
     bool push(const KeyT& key, const ValueT& value) {
