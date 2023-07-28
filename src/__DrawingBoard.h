@@ -59,28 +59,6 @@ namespace avltree {
             return _children[h(ordering)];
         }
 
-        int find(
-            const T& needle,
-            Node*& parent,
-            std::function<void(Node*, int)> forEach
-                = std::function<void(Node*, int)>(
-                    [](Node* n, int o) {}
-                )
-        ) {
-            int order = Order_Relation(needle, _payload);
-            forEach(parent, order);
-
-            if (!order)
-                return 0;
-
-            Node* n = child(order);
-
-            if (!n)
-                return order;
-
-            return n->find(needle, parent, forEach);
-        }
-
         void for_each(std::function<void(const T&)> doThis) {
             if (_children[0])
                 _children[0]->for_each(doThis);
@@ -158,7 +136,7 @@ namespace avltree {
         if (n->child(phi)) {
             int factor = avltree::factor(n->child(phi));
             n->child(phi) = pop(n->child(phi), phi, c);
-            return rebalance(n, -phi, factor, true);
+            return rebalance(n, -phi, -factor, true);
         }
 
         c = n->_payload;
@@ -192,8 +170,18 @@ namespace avltree {
             int lean = -1;
 
             if (!n->child(lean)) {
-                delete n;
-                m = nullptr;
+                if (n->child(-lean)) {
+                    n->_payload = n->child(-lean)->_payload;
+                    delete n->child(-lean);
+                    n->child(-lean) = nullptr;
+                    n->_factor = 0;
+                    m = n;
+                }
+                else {
+					delete n;
+					m = nullptr;
+                }
+
                 return true;
             }
 
@@ -209,7 +197,7 @@ namespace avltree {
             n->child(phi) = m;
         }
 
-        m = rebalance(n, -phi, factor, true);
+        m = rebalance(n, -phi, -factor, true);
         return true;
     }
 
@@ -265,6 +253,34 @@ namespace avltree {
         to_vector(n->_children[0], next - 1, list);
         to_vector(n->_children[1], next, list);
     }
+
+    template <
+        typename T,
+        int (*R)(const T&, const T&) = Compare<T>
+    >
+    static int
+    find(
+        Node<T, R>* n,
+        const T& needle,
+        Node<T, R>*& parent,
+        std::function<void(Node<T, R>*, int)> forEach
+            = std::function<void(Node<T, R>*, int)>(
+                [](Node<T, R>* n, int o) {}
+            )
+    ) {
+        int order = R(needle, n->_payload);
+        forEach(parent, order);
+
+        if (!order)
+            return 0;
+
+        Node<T, R>* m = n->child(order);
+
+        if (!m)
+            return order;
+
+        return find(m, needle, parent, forEach);
+    }
 }
 
 template <
@@ -298,7 +314,7 @@ public:
     bool at(const T& needle, T& out) const {
         N* temp = _root;
 
-        if (_root && _root->find(needle, temp)) {
+        if (_root && avltree::find(_root, needle, temp)) {
             out = temp->_payload;
             return true;
         }
@@ -374,20 +390,16 @@ public:
         if (!any())
             return false;
 
-        top = _root->_payload;
-        int factor = avltree::factor(_root->child(-1));
-        _root->child(-1) = avltree::pop(_root->child(-1), 1, _root->_payload);
-        _root = avltree::rebalance(_root, -1, factor, true);
+        int phi = -1;
+		int factor = avltree::factor(_root);
+        _root = avltree::pop(_root, phi, top);
+		_root = rebalance(_root, -phi, -factor, true);
         return true;
     }
 
     bool pop() {
-        if (!any())
-            return false;
-
         T temp;
-        _root = avltree::pop(_root, -1, temp);
-        return true;
+        return pop(temp);
     }
 
     void for_each(std::function<void(const T&)> doThis) const {
@@ -416,7 +428,7 @@ private:
         KeyT key;
         ValueT value;
     };
-
+public:
     SortedSet<
         Pair,
         [](const Pair& f, const Pair& s) -> int {
@@ -453,15 +465,14 @@ public:
     };
 
     Maybe operator[](const KeyT& key) const {
-        Pair p1 = Pair{ key, ValueT() };
-        Pair p2;
-        bool success = _set.at(p1, p2);
-        Maybe maybe = Maybe{ success, p2.value };
+        Pair pair;
+        bool success = _set.at(Pair{ key, ValueT() }, pair);
+        Maybe maybe = Maybe{ success, pair.value };
         return maybe;
     }
 
     bool push(const KeyT& key, const ValueT& value) {
-        return _set.push(Pair{key, value});
+        return _set.push(Pair{ key, value });
     }
 
     bool remove(const KeyT& key, const ValueT& value) {
@@ -498,20 +509,3 @@ public:
     //     return list;
     // }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
