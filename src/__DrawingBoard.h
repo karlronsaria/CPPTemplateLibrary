@@ -51,12 +51,12 @@ namespace avltree {
             return (r + 1) >> 1;
         }
 
-        const Node*& child(int ordering) const {
-            return _children[h(ordering)];
+        const Node*& child(int phi) const {
+            return _children[h(phi)];
         }
 
-        Node*& child(int ordering) {
-            return _children[h(ordering)];
+        Node*& child(int phi) {
+            return _children[h(phi)];
         }
 
         void for_each(std::function<void(const T&)> doThis) {
@@ -106,17 +106,12 @@ namespace avltree {
     }
 
     template <typename N>
-    N* rotate(N* in, int order) {
-        N* out = in->child(order);
-        in->child(order) = out->child(-order);
-        out->child(-order) = in;
-
-        // // todo
-        // out->_factor = new_factor(out);
-        // in->_factor = 0;
-
+    N* rotate(N* in, int phi) {
+        N* out = in->child(phi);
+        in->child(phi) = out->child(-phi);
+        out->child(-phi) = in;
         in->_factor = new_factor(in);
-        out->_factor = 0;
+        out->_factor -= phi;
         return out;
     }
 
@@ -132,44 +127,13 @@ namespace avltree {
     }
 
     template <typename N>
-    N* rebalance(N* n, int phi, int prevFactor, bool reverse) {
-        int nextFactor = factor(n->child(reverse ? -phi : phi));
-
-        /*
-        changeTheFactor <-
-            if reverse then
-                factor(child(phi))
-                    was not zero
-                    is now zero
-                or
-                child(phi)
-                    was not null
-                    is now null
-            else
-                
-        */
-
+    N* rebalance(N* n, int phi, int prevFactor, int nextFactor, int opposite, bool reverse) {
         if (!reverse == (bool)(nextFactor && (nextFactor - prevFactor)))
             n->_factor += phi;
 
         return abs(n->_factor) > 1
-            ? rotate(n, phi, nextFactor ? nextFactor : phi)
+            ? rotate(n, phi, opposite ? opposite : phi)
             : n;
-    }
-
-    // todo
-    template <
-        typename T,
-        int (*R)(const T&, const T&) = Compare<T>
-    >
-    Node<T, R>* pop2(Node<T, R>* n, T& c) {
-        if (!n)
-            return nullptr;
-
-        if (n->child(-1)) {
-            int f = avltree::factor(n->child(-1));
-            n->child(-1) = pop2(n->child(-1), c);
-        }
     }
 
     template <
@@ -183,7 +147,17 @@ namespace avltree {
         if (n->child(phi)) {
             int factor = avltree::factor(n->child(phi));
             n->child(phi) = pop(n->child(phi), phi, c);
-            return rebalance(n, -phi, factor, true);
+			int nextFactor = avltree::factor(n->child(phi));
+            int opposite = avltree::factor(n->child(-phi));
+
+            return rebalance(
+                n,
+                -phi,
+                factor,
+                nextFactor,
+                opposite,
+                true
+            );
         }
 
         c = n->_payload;
@@ -244,7 +218,18 @@ namespace avltree {
             n->child(phi) = m;
         }
 
-        m = rebalance(n, -phi, -factor, true);
+		int nextFactor = avltree::factor(n->child(phi));
+		int opposite = avltree::factor(n->child(-phi));
+
+		return rebalance(
+			n,
+			-phi,
+			factor,
+			nextFactor,
+			opposite,
+			true
+		);
+
         return true;
     }
 
@@ -271,7 +256,8 @@ namespace avltree {
             return nullptr;
 
         n->child(phi) = y;
-        return rebalance(n, phi, factor, false);
+        int nextFactor = avltree::factor(n->child(phi));
+        return rebalance(n, phi, factor, nextFactor, nextFactor, false);
     }
 
     template <
@@ -315,16 +301,16 @@ namespace avltree {
                 [](Node<T, R>* n, int o) {}
             )
     ) {
-        int order = R(needle, n->_payload);
-        forEach(parent, order);
+        int phi = R(needle, n->_payload);
+        forEach(parent, phi);
 
-        if (!order)
+        if (!phi)
             return 0;
 
-        Node<T, R>* m = n->child(order);
+        Node<T, R>* m = n->child(phi);
 
         if (!m)
-            return order;
+            return phi;
 
         return find(m, needle, parent, forEach);
     }
@@ -437,11 +423,8 @@ public:
         if (!any())
             return false;
 
-        int phi = -1;
-		// int factor = avltree::factor(_root);
-        _root = avltree::pop(_root, phi, top);
-		// _root = rebalance(_root, -phi, -factor, true);
-
+        _root = avltree::pop(_root, -1, top);
+        _size--;
         return true;
     }
 
