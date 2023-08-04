@@ -27,7 +27,7 @@ namespace avltree {
         Node(const T& payload):
             _payload(payload),
             _factor(0),
-            _children{nullptr, nullptr} {}
+            _children{ nullptr, nullptr } {}
 
         Node(const Node& other):
             _payload(other._payload),
@@ -91,6 +91,18 @@ namespace avltree {
     template <typename N>
     int factor(N* n) {
         return n == nullptr ? 0 : n->_factor;
+        // return !n ? -1 : abs(n->_factor);
+    }
+
+	template <typename N>
+	int factor(N* a, N* b) {
+		return (!b ? -1 : abs(b->_factor))
+			- (!a ? -1 : abs(a->_factor));
+	}
+
+    template <typename N>
+    int new_factor(N* n) {
+        return factor(n->child(-1), n->child(1));
     }
 
     template <typename N>
@@ -98,7 +110,13 @@ namespace avltree {
         N* out = in->child(order);
         in->child(order) = out->child(-order);
         out->child(-order) = in;
-        in->_factor = out->_factor = 0;
+
+        // // todo
+        // out->_factor = new_factor(out);
+        // in->_factor = 0;
+
+        in->_factor = new_factor(in);
+        out->_factor = 0;
         return out;
     }
 
@@ -115,7 +133,21 @@ namespace avltree {
 
     template <typename N>
     N* rebalance(N* n, int phi, int prevFactor, bool reverse) {
-        int nextFactor = factor(n->child(phi));
+        int nextFactor = factor(n->child(reverse ? -phi : phi));
+
+        /*
+        changeTheFactor <-
+            if reverse then
+                factor(child(phi))
+                    was not zero
+                    is now zero
+                or
+                child(phi)
+                    was not null
+                    is now null
+            else
+                
+        */
 
         if (!reverse == (bool)(nextFactor && (nextFactor - prevFactor)))
             n->_factor += phi;
@@ -123,6 +155,21 @@ namespace avltree {
         return abs(n->_factor) > 1
             ? rotate(n, phi, nextFactor ? nextFactor : phi)
             : n;
+    }
+
+    // todo
+    template <
+        typename T,
+        int (*R)(const T&, const T&) = Compare<T>
+    >
+    Node<T, R>* pop2(Node<T, R>* n, T& c) {
+        if (!n)
+            return nullptr;
+
+        if (n->child(-1)) {
+            int f = avltree::factor(n->child(-1));
+            n->child(-1) = pop2(n->child(-1), c);
+        }
     }
 
     template <
@@ -136,7 +183,7 @@ namespace avltree {
         if (n->child(phi)) {
             int factor = avltree::factor(n->child(phi));
             n->child(phi) = pop(n->child(phi), phi, c);
-            return rebalance(n, -phi, -factor, true);
+            return rebalance(n, -phi, factor, true);
         }
 
         c = n->_payload;
@@ -391,9 +438,10 @@ public:
             return false;
 
         int phi = -1;
-		int factor = avltree::factor(_root);
+		// int factor = avltree::factor(_root);
         _root = avltree::pop(_root, phi, top);
-		_root = rebalance(_root, -phi, -factor, true);
+		// _root = rebalance(_root, -phi, -factor, true);
+
         return true;
     }
 
