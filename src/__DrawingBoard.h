@@ -221,7 +221,7 @@ namespace avltree {
 		int nextFactor = avltree::factor(n->child(phi));
 		int opposite = avltree::factor(n->child(-phi));
 
-		return rebalance(
+		m = rebalance(
 			n,
 			-phi,
 			factor,
