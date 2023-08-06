@@ -1,3 +1,6 @@
+#ifndef AVLTREE_H_
+#define AVLTREE_H_
+
 #include <functional>
 
 namespace avltree {
@@ -339,3 +342,4 @@ namespace avltree {
     }
 }
 
+#endif /* AVLTREE_H_ */

@@ -1,3 +1,6 @@
+#ifndef AVLSORTEDSET_H_
+#define AVLSORTEDSET_H_
+
 #include "avltree.h"
 
 template <typename T>
@@ -228,3 +231,5 @@ public:
     //     return list;
     // }
 };
+
+#endif /* AVLSORTEDSET_H_ */
