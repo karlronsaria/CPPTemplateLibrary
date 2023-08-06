@@ -291,7 +291,9 @@ namespace avltree {
         std::vector<avltree::NodeInfo<T>>& list
     ) {
         int next = 2 * (index + 1);
-        list.resize(next + 1);
+
+        if (next + 1 > list.size())
+			list.resize(next + 1);
 
         if (!n) {
             list[index] = avltree::NodeInfo<T>{false, 0, T()};
