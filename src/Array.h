@@ -23,11 +23,11 @@ class Array: public Aggregate<Content_Type>
 	public:
 
 		Array():
-			 _array_list(NULL),
+			 _array_list(NULL, true),
 		     _size(0) {}
 
 		Array(size_t arraySize):
-			 _array_list(new Content_Type[arraySize]),
+			 _array_list(new Content_Type[arraySize], true),
 			 _size(arraySize) {}
 
 		Array(std::initializer_list<Content_Type> list) :
@@ -35,7 +35,7 @@ class Array: public Aggregate<Content_Type>
 			_size(list.size()) {}
 
 		Array(size_t arraySize, const Content_Type & content):
-			 _array_list(new Content_Type[arraySize]),
+			 _array_list(new Content_Type[arraySize], true),
 			 _size(arraySize)
 		{
 			size_t index;
@@ -45,7 +45,7 @@ class Array: public Aggregate<Content_Type>
 		}
 
 		Array(const Array & object):
-			 _array_list(new Content_Type[object.size()]),
+			 _array_list(new Content_Type[object.size()], true),
 			 _size(object.size())
 		{
 			arrayfunction::copy_values(
@@ -70,20 +70,20 @@ class Array: public Aggregate<Content_Type>
         */
 		virtual void resize(size_t newSize)
 		{
-			if (newSize >= _size)
-			{
-				Array temp(newSize);
+			if (newSize < _size)
+				return;
 
-				arrayfunction::copy_values(
-					temp._array_list.reference(),
-					_array_list.reference(),
-					temp._size,
-					_size
-				);
+			Array temp(newSize);
 
-				swap(_array_list, temp._array_list);
-			   _size = temp._size;
-			}
+			arrayfunction::copy_values(
+				temp._array_list.reference(),
+				_array_list.reference(),
+				temp._size,
+				_size
+			);
+
+			swap(_array_list, temp._array_list);
+		    _size = temp._size;
 		}
 
 		virtual void resize()
