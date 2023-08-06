@@ -36,7 +36,7 @@ public:
     bool at(const T& needle, T& out) const {
         N* temp = _root;
 
-        if (_root && avltree::find(_root, needle, temp)) {
+        if (_root && !avltree::find(_root, needle, temp)) {
             out = temp->_payload;
             return true;
         }
@@ -148,13 +148,12 @@ private:
         KeyT key;
         ValueT value;
     };
+
+    static int _compare(const Pair& f, const Pair& s) {
+        return R(f.key, s.key);
+    }
 public:
-    SortedSet<
-        Pair,
-        [](const Pair& f, const Pair& s) -> int {
-            return R(f.key, s.key);
-        }
-    >
+    SortedSet<Pair, _compare>
     _set;
 public:
     SortedMap() = default;
@@ -195,8 +194,8 @@ public:
         return _set.push(Pair{ key, value });
     }
 
-    bool remove(const KeyT& key, const ValueT& value) {
-        return _set.push(Pair{key, value});
+    bool remove(const KeyT& key) {
+        return _set.remove(Pair{ key, ValueT() });
     }
 
     bool pop(KeyT& key, ValueT& value) {
