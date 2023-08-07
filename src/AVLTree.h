@@ -1,6 +1,7 @@
 #ifndef AVLTREE_H_
 #define AVLTREE_H_
 
+#include "List.h"
 #include <functional>
 
 namespace avltree {
@@ -202,7 +203,7 @@ namespace avltree {
         typename T,
         int (*R)(const T&, const T&)
     >
-    bool remove(Node<T, R>* n, const T& z, Node<T, R>*& m) {
+    bool remove(Node<T, R>* n, const T& z, Node<T, R>*& m, int lean) {
         if (!n) {
             m = nullptr;
             return false;
@@ -212,8 +213,6 @@ namespace avltree {
         int phi = R(z, n->_payload);
 
         if (!phi) {
-            int lean = -1;
-
             if (!n->child(lean)) {
                 if (n->child(-lean)) {
                     n->_payload = n->child(-lean)->_payload;
@@ -236,7 +235,7 @@ namespace avltree {
         else {
             factor = avltree::factor(n->child(phi));
 
-            if (!remove(n->child(phi), z, m))
+            if (!remove(n->child(phi), z, m, lean))
                 return false;
 
             n->child(phi) = m;
@@ -288,15 +287,15 @@ namespace avltree {
         typename T,
         int (*R)(const T&, const T&)
     >
-    void to_vector(
+    void to_list(
         Node<T, R>* n,
         int index,
-        std::vector<avltree::NodeInfo<T>>& list
+        List<avltree::NodeInfo<T>>& list
     ) {
         int next = 2 * (index + 1);
 
         if (next + 1 > list.size())
-			list.resize(next + 1);
+            list.resize(next + 1);
 
         if (!n) {
             list[index] = avltree::NodeInfo<T>{false, 0, T()};
@@ -309,8 +308,8 @@ namespace avltree {
             n->_payload
         };
 
-        to_vector(n->_children[0], next - 1, list);
-        to_vector(n->_children[1], next, list);
+        to_list(n->_children[0], next - 1, list);
+        to_list(n->_children[1], next, list);
     }
 
     template <

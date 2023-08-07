@@ -97,13 +97,15 @@ public:
         return success;
     }
 
+    const static int LEAN = -1;
+
     bool remove(const T& needle) {
         if (!_size)
             return false;
 
         N* newRoot = nullptr;
 
-        if (!avltree::remove(_root, needle, newRoot))
+        if (!avltree::remove(_root, needle, newRoot, LEAN))
             return false;
 
         _size--;
@@ -132,10 +134,10 @@ public:
         _root->for_each(doThis);
     }
 
-    std::vector<avltree::NodeInfo<T>>
-    to_vector() const {
-        std::vector<avltree::NodeInfo<T>> list;
-        avltree::to_vector(_root, 0, list);
+    List<avltree::NodeInfo<T>>
+    to_list() const {
+        List<avltree::NodeInfo<T>> list;
+        avltree::to_list(_root, 0, list);
         return list;
     }
 };

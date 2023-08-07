@@ -15,9 +15,9 @@ class Container
 
 	public:
 
-		Container() {}
+		Container(): _content() {}
 		Container(const Content_Type & content): _content(content) {}
-	   ~Container() {}
+	    virtual ~Container() {}
 
 		const Content_Type & content () const { return _content; }
 		      Content_Type & content ()       { return _content; }

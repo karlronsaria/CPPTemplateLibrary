@@ -37,7 +37,7 @@ class BinaryNode: public Container<Content_Type>
 		BinaryNode() {}
 		BinaryNode(const Content_Type & content):
 			Container<Content_Type>(content) {}
-	   ~BinaryNode() {}
+	    virtual ~BinaryNode() {}
 
 	    const scoped_ptr<BinaryNode> & next() const      { return _next; }
 	          scoped_ptr<BinaryNode> & next()            { return _next; }

@@ -15,10 +15,10 @@
 #include "Bidirectional\Pop.h"
 #include "Bidirectional\Position.h"
 #include "Bidirectional\Push.h"
+#include <initializer_list>
 
 // Test
 #include "Bidirectional\Print.h"
-#include <iostream>
 
 /*************************************************************************
  * List                                                                  *
@@ -64,7 +64,34 @@ class List: public Collection
 	public:
 
 		List(): _attributes(new object) {}
-	   ~List()                          {}
+	    virtual ~List()                 {}
+
+		List(const List & other):
+			_attributes(new object)
+		{
+			*this = other;
+		}
+
+		List & operator=(const List & other)
+		{
+			clear();
+
+			for (auto& item : other)
+				push_back(item);
+
+			return *this;
+		}
+
+        List(const std::initializer_list<Content_Type> &);
+        List & operator=(const std::initializer_list<Content_Type> &);
+
+        Content_Type & operator[](size_t index) {
+            return (begin() + index)._pointer->content();
+        }
+
+        const Content_Type & operator[](size_t index) const {
+            return (begin() + index)._pointer->content();
+        }
 
 	          Content_Type & front ()       { return _attributes->_head->content(); }
 	    const Content_Type & front () const { return _attributes->_head->content(); }
@@ -82,6 +109,7 @@ class List: public Collection
 		void push_front (const Content_Type &);
 		void push_back  ();
 		void push_back  (const Content_Type &);
+        void resize     (size_t);
 
 		Content_Type pop_front ();
 		Content_Type pop_back  ();
@@ -124,8 +152,12 @@ class List: public Collection
 				      iterator       operator-- (int);
 				      iterator     & operator+= (size_t);
 				const iterator       operator+  (size_t) const;
+				      iterator       operator+  (size_t);
 				      iterator     & operator-= (size_t);
 				const iterator       operator-  (size_t) const;
+				      iterator       operator-  (size_t);
+                      bool           operator== (const iterator &);
+                      bool           operator!= (const iterator &);
 
 				void         insert ();
 				void         insert (const Content_Type &);
@@ -140,7 +172,8 @@ class List: public Collection
 
 	public:
 
-		iterator begin () const;
+		const iterator begin () const;
+		iterator begin ();
 		iterator end   () const;
 };
 
@@ -278,13 +311,25 @@ List<C>::iterator::operator--(int)
 	return temp;
 }
 
+template <typename C>
+bool List<C>::iterator::operator== (const List<C>::iterator & other)
+{
+    return _pointer == other._pointer;
+}
+
+template <typename C>
+bool List<C>::iterator::operator!= (const List<C>::iterator & other)
+{
+    return !(*this == other);
+}
+
 // - - Forward Shift
 
 template <typename C>
 typename List<C>::iterator &
 List<C>::iterator::operator+=(size_t distance)
 {
-	binarynode::GetPositionForward(_pointer, distance, _pointer);
+	binarynode::GetPositionForward<C>(_pointer, distance, _pointer);
 
 	return *this;
 }
@@ -293,7 +338,16 @@ template <typename C>
 const typename List<C>::iterator
 List<C>::iterator::operator+(size_t distance) const
 {
-	node_loc temp;
+	typename List<C>::iterator temp = *this;
+
+	return temp += distance;
+}
+
+template <typename C>
+typename List<C>::iterator
+List<C>::iterator::operator+(size_t distance)
+{
+	typename List<C>::iterator temp = *this;
 
 	return temp += distance;
 }
@@ -304,7 +358,7 @@ template <typename C>
 typename List<C>::iterator &
 List<C>::iterator::operator-=(size_t distance)
 {
-	binarynode::GetPositionBackward(_pointer, distance, _pointer);
+	binarynode::GetPositionBackward<C>(_pointer, distance, _pointer);
 
 	return *this;
 }
@@ -313,7 +367,16 @@ template <typename C>
 const typename List<C>::iterator
 List<C>::iterator::operator-(size_t distance) const
 {
-	node_loc temp;
+	typename List<C>::iterator temp = *this;
+
+	return temp -= distance;
+}
+
+template <typename C>
+typename List<C>::iterator
+List<C>::iterator::operator-(size_t distance)
+{
+	typename List<C>::iterator temp = *this;
 
 	return temp -= distance;
 }
@@ -387,7 +450,7 @@ void List<C>::push_front(typename List<C>::node_ptr & node)
 
 	binarynode::PushFront(_attributes->_head, _attributes->_tail, node);
 
-    ++(*_attributes->_size);
+	++(*_attributes->_size);
 }
 
 template <typename C>
@@ -395,7 +458,17 @@ void List<C>::push_back(typename List<C>::node_ptr & node)
 {
 	binarynode::PushBack(_attributes->_head, _attributes->_tail, node);
 
-    ++(*_attributes->_size);
+	++(*_attributes->_size);
+}
+
+template <typename C>
+void List<C>::resize(size_t newSize)
+{
+    while (size() < newSize)
+        push_back();
+
+    while (size() > newSize)
+        pop_back();
 }
 
 template <typename C>
@@ -408,6 +481,24 @@ void List<C>::set(iterator & it) const
 /**************************
  * --- Public Methods --- *
  **************************/
+
+// - Initializers
+
+template <typename C>
+List<C>::List(const std::initializer_list<C> & list):
+	_attributes(new object)
+{
+	for (auto& item : list)
+		push_back(item);
+}
+
+template <typename C>
+List<C> & List<C>::operator=(const std::initializer_list<C> & list)
+{
+	*this = List<C>(list);
+
+	return *this;
+}
 
 // - Mutators
 
@@ -480,7 +571,19 @@ C List<C>::pop_back()
 // - - Iterators
 
 template <typename C>
-typename List<C>::iterator List<C>::begin() const
+const typename List<C>::iterator List<C>::begin() const
+{
+	iterator temp;
+
+	temp._pointer = _attributes->_head;
+
+	set(temp);
+
+	return temp;
+}
+
+template <typename C>
+typename List<C>::iterator List<C>::begin()
 {
 	iterator temp;
 
@@ -496,7 +599,7 @@ typename List<C>::iterator List<C>::end() const
 {
 	iterator temp;
 
-	temp._pointer = _attributes->_tail;
+	temp._pointer = NULL;
 
 	set(temp);
 
