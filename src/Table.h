@@ -31,8 +31,8 @@ class Table: public Array<Array<Content_Type>>
 			Array<Content_Type> temp(cols);
 			size_t index;
 
-			foreach (*this, index)
-				(*this)[index] = temp;
+            for (auto& item : *this)
+                item = temp;
 		}
 
 		Table(
@@ -86,8 +86,8 @@ class Table: public Array<Array<Content_Type>>
 			Array<Content_Type> temp(cols, content);
 			size_t index;
 
-			foreach (*this, index)
-				(*this)[index] = temp;
+            for (auto& item : *this)
+                item = temp;
 		}
 
 		Table(const Table &) = default;

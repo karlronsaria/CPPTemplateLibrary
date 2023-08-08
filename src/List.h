@@ -1,609 +1,504 @@
-/*
- * List.h
- *
- *  Created on: Apr 10, 2015
- *      Author: adaniels4
- */
-
 #ifndef LIST_H_
 #define LIST_H_
 
-// #include "Iterator.h"
+#include "Aggregate.h"
 #include "Collection.h"
-#include "BinaryNode.h"
-#include "Bidirectional\Connect.h"
-#include "Bidirectional\Pop.h"
-#include "Bidirectional\Position.h"
-#include "Bidirectional\Push.h"
 #include <initializer_list>
 
-// Test
-#include "Bidirectional\Print.h"
+template <typename T>
+class List: public Collection, Aggregate<T> {
+private:
+    struct Node {
+        T payload = T();
+        Node* prev = nullptr;
+        Node* next = nullptr;
+    };
 
-/*************************************************************************
- * List                                                                  *
- * _____________________________________________________________________ *
- *                                                                       *
- * A doubly-linked list that can be traversed to two directions.         *
- * Parameterizes node container content.                                 *
- *                                                                       *
- *************************************************************************/
+    Node* at(int pos) const {
+        Node* n = nullptr;
+        int i = 0;
 
-template <typename Content_Type>
-class List: public Collection
-{
-	public:
+        if (pos < 0) {
+            i = -1;
+            n = _tail;
 
-		typedef scoped_ptr< BinaryNode<Content_Type> > node_ptr;
-		typedef typename node_ptr::locator             node_loc;
+            while (i-- > pos)
+                n = n->prev;
+        }
+        else {
+            n = _head;
 
-		typedef scoped_ptr< size_t > size_ptr;
-		typedef size_ptr::locator    size_loc;
-
-	private:
-
-		struct object
-		{
-			node_ptr  _head;
-			node_loc  _tail;
-			size_ptr  _size;
-
-			object(): _size(new size_t(0)) {}
-		};
-
-		typedef scoped_ptr<object>            object_ptr;
-		typedef typename object_ptr::locator  object_loc;
-
-		object_ptr _attributes;
-
-	protected:
-
-		void push_front (node_ptr &);
-		void push_back  (node_ptr &);
-
-	public:
-
-		List(): _attributes(new object) {}
-	    virtual ~List()                 {}
-
-		List(const List & other):
-			_attributes(new object)
-		{
-			*this = other;
-		}
-
-		List & operator=(const List & other)
-		{
-			clear();
-
-			for (auto& item : other)
-				push_back(item);
-
-			return *this;
-		}
-
-        List(const std::initializer_list<Content_Type> &);
-        List & operator=(const std::initializer_list<Content_Type> &);
-
-        Content_Type & operator[](size_t index) {
-            return (begin() + index)._pointer->content();
+            while (i++ < pos)
+                n = n->next;
         }
 
-        const Content_Type & operator[](size_t index) const {
-            return (begin() + index)._pointer->content();
+        return n;
+    }
+
+    Node* _head;
+    Node* _tail;
+    size_t _size;
+public:
+    List():
+        _head(nullptr),
+        _tail(nullptr),
+        _size(0) {}
+
+    virtual ~List() {
+        clear();
+    }
+
+    List(const List& other) {
+        *this = other;
+    }
+
+    List& operator=(const List& other) {
+        clear();
+        auto n = other._head;
+
+        while (n) {
+            push_back(n->payload);
+            n = n->next;
         }
 
-	          Content_Type & front ()       { return _attributes->_head->content(); }
-	    const Content_Type & front () const { return _attributes->_head->content(); }
-	          Content_Type & back  ()       { return _attributes->_tail->content(); }
-	    const Content_Type & back  () const { return _attributes->_tail->content(); }
+        return *this;
+    }
 
-		bool   empty () const { return *_attributes->_size == 0; }
-		size_t size  () const { return *_attributes->_size; }
+    List(const std::initializer_list<T>& list) {
+        *this = list;
+    }
 
-		void   clear () {  _attributes->_head.deallocate();
-		                   _attributes->_tail.avert();
-		                  *_attributes->_size = 0; }
+    List& operator=(const std::initializer_list<T>& list) {
+        clear();
 
-		void push_front ();
-		void push_front (const Content_Type &);
-		void push_back  ();
-		void push_back  (const Content_Type &);
-        void resize     (size_t);
+        for (auto& item : list)
+            push_back(item);
 
-		Content_Type pop_front ();
-		Content_Type pop_back  ();
+        return *this;
+    }
 
-		// Test
-		void print          () const
+    size_t size() const {
+        return _size;
+    }
 
-			{ listnode::Print(_attributes->_head); }
+    bool any() const {
+        return _size;
+    }
 
-		void print_reversed () const
+    const T& front() const {
+        // fails fast
+        return _head->payload;
+    }
 
-			{ listnode::PrintReversed< BinaryNode<Content_Type> >
+    T& front() {
+        // fails fast
+        return _head->payload;
+    }
 
-				(_attributes->_tail); }
+    const T& back() const {
+        // fails fast
+        return _tail->payload;
+    }
 
-		class iterator
-		{
-			private:
+    T& back() {
+        // fails fast
+        return _tail->payload;
+    }
 
-				node_loc   _pointer;
-				object_loc _list_pointer;
+    List& push_back(const T& t) {
+        bool hasAny = any();
+        ++_size;
 
-			protected:
+        if (!hasAny) {
+            _head = new Node{ t, nullptr, nullptr };
+            _tail = _head;
+            return *this;
+        }
 
-				void insert(node_ptr &);
+        auto n = new Node{ t, _tail, nullptr };
+        _tail->next = n;
+        _tail = n;
+        return *this;
+    }
 
-			public:
+    List& push_back() {
+        return push_back(T());
+    }
 
-				      iterator();
-			         ~iterator();
+    List& push_front(const T& t) {
+        bool hasAny = any();
+        ++_size;
 
-				      iterator     & operator=  (const iterator &);
-				      Content_Type & operator*  ();
-				const Content_Type & operator*  ()       const;
-				      Content_Type * operator-> ();
-				const Content_Type * operator-> ()       const;
-				      iterator       operator++ ();
-				      iterator       operator++ (int);
-				      iterator       operator-- ();
-				      iterator       operator-- (int);
-				      iterator     & operator+= (size_t);
-				const iterator       operator+  (size_t) const;
-				      iterator       operator+  (size_t);
-				      iterator     & operator-= (size_t);
-				const iterator       operator-  (size_t) const;
-				      iterator       operator-  (size_t);
-                      bool           operator== (const iterator &);
-                      bool           operator!= (const iterator &);
+        if (!hasAny) {
+            _head = new Node{ t, nullptr, nullptr };
+            _tail = _head;
+            return *this;
+        }
 
-				void         insert ();
-				void         insert (const Content_Type &);
-				Content_Type remove ();
+        auto n = new Node{ t, nullptr, _head };
+        _head->prev = n;
+        _tail = n;
+        return *this;
+    }
 
-				friend class List;
-		};
+    List& push_front() {
+        return push_front(T());
+    }
 
-	protected:
+    bool pop_back() {
+        if (!any())
+            return false;
 
-		void set (iterator &) const;
+        auto n = _head;
+        _head = n->next;
+        _head->prev = nullptr;
+        delete n;
+        --_size;
+        return true;
+    }
 
-	public:
+    bool pop_front() {
+        if (!any())
+            return false;
 
-		const iterator begin () const;
-		iterator begin ();
-		iterator end   () const;
+        auto n = _tail;
+        _tail = n->prev;
+        _tail->next = nullptr;
+        delete n;
+        --_size;
+        return false;
+    }
+
+    List& insert(const T& t, size_t pos) {
+        if (!any() || pos == _size) {
+            push_back(t);
+            return *this;
+        }
+
+        if (!pos) {
+            push_front(t);
+            return *this;
+        }
+
+        if (pos > _size)
+            return *this;
+
+        auto next = _head;
+        size_t i = 0;
+
+        while (i++ < pos)
+            next = next->next;
+
+        auto prev = next->prev;
+        auto n = new Node{ t, prev, next };
+        prev->next = n;
+        next->prev = n;
+        return *this;
+    }
+
+    bool remove(size_t pos) {
+        if (pos >= _size)
+            return false;
+
+        if (!pos) {
+            return pop_front();
+        }
+
+        if (pos == _size - 1) {
+            return pop_back();
+        }
+
+        auto n = _head;
+        size_t i = 0;
+
+        while (i++ < pos)
+            n = n->next;
+
+        n->prev->next = n->next;
+        n->next->prev = n->prev;
+        delete n;
+        return true;
+    }
+
+    List& clear() {
+        switch (_size) {
+        case 0:
+            break;
+        case 1:
+            delete _head;
+            break;
+        default:
+            auto n = _head->next;
+
+            while (n->next) {
+                delete n->prev;
+                n = n->next;
+            }
+
+            delete n->prev;
+            delete n;
+            break;
+        }
+
+        _size = 0;
+        _head = nullptr;
+        _tail = nullptr;
+        return *this;
+    }
+public:
+    const T& operator[](int pos) const {
+        // fails fast
+        return at(pos)->payload;
+    }
+
+    T& operator[](int pos) {
+        // fails fast
+        return at(pos)->payload;
+    }
+
+    List& resize(size_t pos) {
+        while (_size < pos)
+            push_back();
+
+        while (_size > pos)
+            pop_back();
+
+        return *this;
+    }
+
+    class Enumerator {
+    private:
+        List* _list;
+        Node* _node;
+        Node* (*_prev)(Node*);
+        Node* (*_next)(Node*);
+
+        static Node* default_next(Node* n) {
+            return n->next;
+        }
+
+        static Node* default_prev(Node* n) {
+            return n->prev;
+        }
+
+        static Node* ret(Node* n) {
+            return n;
+        }
+
+        Enumerator(List* l, Node* n):
+            _list(l),
+            _node(n),
+            _prev(&default_prev),
+            _next(&default_next) {}
+
+        Enumerator(List* l, Node* n, Node* (*prev)(Node*), Node* (*next)(Node*)):
+            _list(l),
+            _node(n),
+            _prev(prev),
+            _next(next) {}
+
+        static Enumerator reverse(List* l, Node* n) {
+            return Enumerator(l, n, &default_next, &default_prev);
+        }
+    public:
+        friend class List;
+
+        Enumerator():
+            _list(nullptr),
+            _node(nullptr),
+            _prev(&ret),
+            _next(&ret) {}
+
+        virtual ~Enumerator() = default;
+        Enumerator(const Enumerator&) = default;
+        Enumerator& operator=(const Enumerator&) = default;
+
+        const T& operator*() const {
+            // fails fast
+            return _node->payload;
+        }
+
+        T& operator*() {
+            // fails fast
+            return _node->payload;
+        }
+
+        const T* operator->() const {
+            // fails fast
+            return &_node->payload;
+        }
+
+        T* operator->() {
+            // fails fast
+            return &_node->payload;
+        }
+
+        Enumerator& operator++() {
+            // fails fast
+            _node = _next(_node);
+            return *this;
+        }
+
+        Enumerator operator++(int) {
+            // fails fast
+            Enumerator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        Enumerator& operator--() {
+            // fails fast
+            _node = _prev(_node);
+            return *this;
+        }
+
+        Enumerator operator--(int) {
+            // fails fast
+            Enumerator temp = *this;
+            --(*this);
+            return temp;
+        }
+
+        Enumerator& operator+=(int pos) {
+            int i = 0;
+
+            while (i++ < pos)
+                ++(*this);
+
+            i = 0;
+
+            while (i-- > pos)
+                ++(*this);
+
+            return *this;
+        }
+
+        Enumerator& operator-=(int pos) {
+            *this += -pos;
+        }
+
+        const Enumerator operator+(int pos) const {
+            Enumerator temp(*this);
+            temp += pos;
+            return temp;
+        }
+
+        Enumerator operator+(int pos) {
+            Enumerator temp(*this);
+            temp += pos;
+            return temp;
+        }
+
+        const Enumerator operator-(int pos) const {
+            Enumerator temp(*this);
+            temp -= pos;
+            return temp;
+        }
+
+        Enumerator operator-(int pos) {
+            Enumerator temp(*this);
+            temp -= pos;
+            return temp;
+        }
+
+        bool operator==(const Enumerator& other) const {
+            return _node == other._node;
+        }
+
+        bool operator!=(const Enumerator& other) const {
+            return !(*this == other);
+        }
+    };
+
+    const Enumerator begin() const {
+        return Enumerator(this, _head);
+    }
+
+    Enumerator begin() {
+        return Enumerator(this, _head);
+    }
+
+    const Enumerator begin_reverse() const {
+        return Enumerator::reverse(this, _tail);
+    }
+
+    Enumerator begin_reverse() {
+        return Enumerator::reverse(this, _tail);
+    }
+
+    const Enumerator end() const {
+        return Enumerator();
+    }
+
+    bool insert_after(Enumerator& it, const T& t) {
+        if (this != it._list)
+            return false;
+
+        if (!any()) {
+            push_back(t);
+            it._node = _tail;
+            return true;
+        }
+
+        Node* n = it._node;
+
+        if (!n)
+            return false;
+
+        Node* m = new Node{ t, n, n->next };
+        (n->next ? n->next->prev : _tail) = m;
+        n->next = m;
+        ++_size;
+        return true;
+    }
+
+    bool insert_before(Enumerator& it, const T& t) {
+        if (this != it._list)
+            return false;
+
+        if (!any()) {
+            push_front();
+            it._node = _head;
+            return true;
+        }
+
+        Node* n = it._node;
+
+        if (!n)
+            return false;
+
+        Node* m = new Node{ t, n->prev, n };
+        (n->prev ? n->prev->next : _head) = m;
+        n->prev = m;
+        ++_size;
+        return true;
+    }
+
+    bool remove(Enumerator& it) {
+        if (this != it._list || !any() || !it._node)
+            return false;
+
+        Node* n = it._node;
+
+        if (!n->prev) {
+            bool success = pop_front();
+            it._node = _head;
+            return success;
+        }
+
+        if (!n->next) {
+            bool success = pop_back();
+            it._node = _tail;
+            return success;
+        }
+
+        n->prev->next = n->next;
+        n->next->prev = n->prev;
+        it._node = n->next;
+        delete n;
+        --_size;
+        return true;
+    }
 };
-
-
-// iterator Methods ------------------------------------------------------
-
-
-/*****************************
- * --- Protected Methods --- *
- *****************************/
-
-template <typename C>
-void List<C>::iterator::insert(node_ptr & node)
-{
-	if(!_pointer.is_null())
-	{
-		if(!node.is_null())
-		{
-			if(_pointer->prev().is_null())
-				_list_pointer->_head.assign(node);
-			else
-				binarynode::Connect(_pointer->prev(), node);
-
-			binarynode::Connect(node, _pointer);
-			node.avert();
-			++(*_list_pointer->_size);
-		}
-	}
-}
-
-
-/**************************
- * --- Public Methods --- *
- **************************/
-
-// - Constructor & Destructor
-
-template <typename C>
-List<C>::iterator::iterator() {}
-
-template <typename C>
-List<C>::iterator::~iterator() {}
-
-// - Operators
-
-// - - Assignment
-
-template <typename C>
-typename List<C>::iterator &
-List<C>::iterator::operator=(const iterator & other)
-{
-	_pointer      = other._pointer;
-	_list_pointer = other._list_pointer;
-
-	return *this;
-}
-
-// - - Dereference
-
-template <typename C>
-C & List<C>::iterator::operator*()
-{
-	assert(_pointer);
-	return _pointer->content();
-}
-
-template <typename C>
-const C & List<C>::iterator::operator*() const
-{
-	assert(_pointer);
-	return _pointer->content();
-}
-
-// - - Dereference Qualifier
-
-template <typename C>
-C * List<C>::iterator::operator->()
-{
-	assert(_pointer);
-	return &_pointer->content();
-}
-
-template <typename C>
-const C * List<C>::iterator::operator->() const
-{
-	assert(_pointer);
-	return &_pointer->content();
-}
-
-// - - Increment
-
-template <typename C>
-typename List<C>::iterator
-List<C>::iterator::operator++()
-{
-	_pointer = _pointer->next();
-
-	return *this;
-}
-
-template <typename C>
-typename List<C>::iterator
-List<C>::iterator::operator++(int)
-{
-	iterator temp;
-
-	temp._pointer = _pointer;
-
-	++(*this);
-
-	return temp;
-}
-
-// - - Decrement
-
-template <typename C>
-typename List<C>::iterator
-List<C>::iterator::operator--()
-{
-	_pointer = _pointer->prev();
-
-	return *this;
-}
-
-template <typename C>
-typename List<C>::iterator
-List<C>::iterator::operator--(int)
-{
-	iterator temp;
-
-	temp._pointer = _pointer;
-
-	--(*this);
-
-	return temp;
-}
-
-template <typename C>
-bool List<C>::iterator::operator== (const List<C>::iterator & other)
-{
-    return _pointer == other._pointer;
-}
-
-template <typename C>
-bool List<C>::iterator::operator!= (const List<C>::iterator & other)
-{
-    return !(*this == other);
-}
-
-// - - Forward Shift
-
-template <typename C>
-typename List<C>::iterator &
-List<C>::iterator::operator+=(size_t distance)
-{
-	binarynode::GetPositionForward<C>(_pointer, distance, _pointer);
-
-	return *this;
-}
-
-template <typename C>
-const typename List<C>::iterator
-List<C>::iterator::operator+(size_t distance) const
-{
-	typename List<C>::iterator temp = *this;
-
-	return temp += distance;
-}
-
-template <typename C>
-typename List<C>::iterator
-List<C>::iterator::operator+(size_t distance)
-{
-	typename List<C>::iterator temp = *this;
-
-	return temp += distance;
-}
-
-// - - Backward Shift
-
-template <typename C>
-typename List<C>::iterator &
-List<C>::iterator::operator-=(size_t distance)
-{
-	binarynode::GetPositionBackward<C>(_pointer, distance, _pointer);
-
-	return *this;
-}
-
-template <typename C>
-const typename List<C>::iterator
-List<C>::iterator::operator-(size_t distance) const
-{
-	typename List<C>::iterator temp = *this;
-
-	return temp -= distance;
-}
-
-template <typename C>
-typename List<C>::iterator
-List<C>::iterator::operator-(size_t distance)
-{
-	typename List<C>::iterator temp = *this;
-
-	return temp -= distance;
-}
-
-// - List-changing Methods
-
-template <typename C>
-void List<C>::iterator::insert()
-{
-	node_ptr node;
-
-	node.reallocate();
-
-	insert(node);
-}
-
-template <typename C>
-void List<C>::iterator::insert(const C & content)
-{
-	node_ptr node;
-
-	node.reallocate();
-
-	node->content(content);
-
-	insert(node);
-}
-
-template <typename C>
-C List<C>::iterator::remove()
-{
-	if(!_pointer.is_null())
-	{
-		node_ptr temp;
-
-		temp.assign(_pointer);
-
-		if(temp->prev().is_null())
-			_list_pointer->_head.avert();
-		else
-			temp->prev()->next().assign(temp->next());
-
-		if(temp->next().is_null())
-			_list_pointer->_tail.avert();
-		else
-		{
-			temp->next()->prev().assign(temp->prev());
-			temp->next().avert();
-		}
-
-		--(*_list_pointer->_size);
-
-		return temp->content();
-	}
-
-	return C();
-}
-
-
-// List Methods ----------------------------------------------------------
-
-
-/*****************************
- * --- Protected Methods --- *
- *****************************/
-
-template <typename C>
-void List<C>::push_front(typename List<C>::node_ptr & node)
-{
-	_attributes->_head.is_null();
-
-	binarynode::PushFront(_attributes->_head, _attributes->_tail, node);
-
-	++(*_attributes->_size);
-}
-
-template <typename C>
-void List<C>::push_back(typename List<C>::node_ptr & node)
-{
-	binarynode::PushBack(_attributes->_head, _attributes->_tail, node);
-
-	++(*_attributes->_size);
-}
-
-template <typename C>
-void List<C>::resize(size_t newSize)
-{
-    while (size() < newSize)
-        push_back();
-
-    while (size() > newSize)
-        pop_back();
-}
-
-template <typename C>
-void List<C>::set(iterator & it) const
-{
-	it._list_pointer = _attributes;
-}
-
-
-/**************************
- * --- Public Methods --- *
- **************************/
-
-// - Initializers
-
-template <typename C>
-List<C>::List(const std::initializer_list<C> & list):
-	_attributes(new object)
-{
-	for (auto& item : list)
-		push_back(item);
-}
-
-template <typename C>
-List<C> & List<C>::operator=(const std::initializer_list<C> & list)
-{
-	*this = List<C>(list);
-
-	return *this;
-}
-
-// - Mutators
-
-// - - Push
-
-template <typename C>
-void List<C>::push_front()
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	push_front(temp);
-}
-
-template <typename C>
-void List<C>::push_front(const C & content)
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	temp->content(content);
-
-	push_front(temp);
-}
-
-template <typename C>
-void List<C>::push_back()
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	push_back(temp);
-}
-
-template <typename C>
-void List<C>::push_back(const C & content)
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	temp->content(content);
-
-	push_back(temp);
-}
-
-// - - Pop
-
-template <typename C>
-C List<C>::pop_front()
-{
-    --(*_attributes->_size);
-
-	return binarynode::PopFront(_attributes->_head, _attributes->_tail);
-}
-
-template <typename C>
-C List<C>::pop_back()
-{
-    --(*_attributes->_size);
-
-	return binarynode::PopBack(_attributes->_head, _attributes->_tail);
-}
-
-// - Accessors
-
-// - - Iterators
-
-template <typename C>
-const typename List<C>::iterator List<C>::begin() const
-{
-	iterator temp;
-
-	temp._pointer = _attributes->_head;
-
-	set(temp);
-
-	return temp;
-}
-
-template <typename C>
-typename List<C>::iterator List<C>::begin()
-{
-	iterator temp;
-
-	temp._pointer = _attributes->_head;
-
-	set(temp);
-
-	return temp;
-}
-
-template <typename C>
-typename List<C>::iterator List<C>::end() const
-{
-	iterator temp;
-
-	temp._pointer = NULL;
-
-	set(temp);
-
-	return temp;
-}
 
 #endif /* LIST_H_ */

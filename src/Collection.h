@@ -10,14 +10,11 @@
 
 #include <stddef.h>
 
-class Collection
-{
-	public:
-
-		virtual ~Collection() {}
-		virtual bool   empty () const = 0;
-		virtual size_t size  () const = 0;
-		virtual void   clear ()       = 0;
+class Collection {
+public:
+    virtual ~Collection() = default;
+    virtual bool any() const = 0;
+    virtual size_t size() const = 0;
 };
 
 #endif /* COLLECTION_H_ */

@@ -8,112 +8,220 @@
 #ifndef ARRAY_H_
 #define ARRAY_H_
 
-#include "arrayfunction.h"
 #include "scoped_ptr.h"
 #include "Aggregate.h"
 
-template <typename Content_Type>
-class Array: public Aggregate<Content_Type>
-{
-	private:
+template <typename T>
+class Array: public Aggregate<T> {
+private:
+    scoped_ptr<T> _array_list;
+    size_t _size;
+public:
+    template <typename Type>
+    static void copy_values(
+        Type* to,
+        Type* from,
+        size_t toSize,
+        size_t fromSize
+    ) {
+        Type* toIt = to;
+        Type* fromIt = from;
 
-		scoped_ptr<Content_Type> _array_list;
-		size_t _size;
+        for (size_t index = 0; index < toSize && index < fromSize; index++) {
+            *toIt = *fromIt;
+            toIt++;
+            fromIt++;
+        }
+    }
 
-	public:
+    Array():
+         _array_list(NULL, true),
+         _size(0) {}
 
-		Array():
-			 _array_list(NULL, true),
-		     _size(0) {}
+    Array(size_t arraySize):
+         _array_list(new T[arraySize], true),
+         _size(arraySize) {}
 
-		Array(size_t arraySize):
-			 _array_list(new Content_Type[arraySize], true),
-			 _size(arraySize) {}
+    Array(const std::initializer_list<T>& list) :
+        _array_list(list),
+        _size(list.size()) {}
 
-		Array(std::initializer_list<Content_Type> list) :
-			_array_list(list),
-			_size(list.size()) {}
+    Array(size_t arraySize, const T& content):
+         _array_list(new T[arraySize], true),
+         _size(arraySize)
+    {
+        for (auto& item : *this)
+            item = content;
+    }
 
-		Array(size_t arraySize, const Content_Type & content):
-			 _array_list(new Content_Type[arraySize], true),
-			 _size(arraySize)
-		{
-			size_t index;
+    Array(const Array& object):
+         _array_list(new T[object.size()], true),
+         _size(object.size())
+    {
+        Array::copy_values(
+            _array_list.reference(),
+            object._array_list.reference(),
+            _size,
+            object._size
+        );
+    }
 
-			foreach(*this, index)
-				(*this)[index] = content;
-		}
+    virtual ~Array() {}
 
-		Array(const Array & object):
-			 _array_list(new Content_Type[object.size()], true),
-			 _size(object.size())
-		{
-			arrayfunction::copy_values(
-				_array_list.reference(),
-				object._array_list.reference(),
-				_size,
-				object._size
-			);
-		}
+    virtual size_t size() const {
+        return _size;
+    }
 
-		virtual ~Array() {}
+    virtual void resize(size_t newSize) {
+        if (newSize < _size)
+            return;
 
-		virtual size_t size() const
-		{
-			return _size;
-		}
+        Array temp(newSize);
 
-        /*
-        [x] issue 2023_05_03_133202
-        - actual: all values uninitialized
-        - expected: original values copied
-        */
-		virtual void resize(size_t newSize)
-		{
-			if (newSize < _size)
-				return;
+        Array::copy_values(
+            temp._array_list.reference(),
+            _array_list.reference(),
+            temp._size,
+            _size
+        );
 
-			Array temp(newSize);
+        swap(_array_list, temp._array_list);
+        _size = temp._size;
+    }
 
-			arrayfunction::copy_values(
-				temp._array_list.reference(),
-				_array_list.reference(),
-				temp._size,
-				_size
-			);
+    virtual void resize() {
+        resize(2 * _size);
+    }
 
-			swap(_array_list, temp._array_list);
-		    _size = temp._size;
-		}
+    virtual const T& operator[](int index) const {
+        return _array_list[((index < 0) * _size) + index];
+    }
 
-		virtual void resize()
-		{
-			resize(2 * _size);
-		}
+    virtual T& operator[](int index) {
+        return _array_list[((index < 0) * _size) + index];
+    }
 
-		virtual const Content_Type & operator[](size_t index) const
-		{
-			return _array_list[index];
-		}
+    virtual Array& operator=(const Array& object) {
+        if (!_array_list.is_null())
+            _array_list.deallocate();
 
-		virtual Content_Type & operator[](size_t index)
-		{
-			return _array_list[index];
-		}
+        _array_list = new T[object._size];
+        _size = object._size;
 
-		virtual Array & operator=(const Array & object)
-		{
-			if (!_array_list.is_null())
-				_array_list.deallocate();
+        for (size_t index = 0; index < _size; index++)
+            _array_list[index] = object._array_list[index];
 
-			_array_list = new Content_Type[object._size];
-			_size = object._size;
+        return *this;
+    }
 
-			for (size_t index = 0; index < _size; index++)
-				_array_list[index] = object._array_list[index];
+    class Enumerator {
+    private:
+        typename scoped_ptr<T>::locator _array_loc;
+        size_t _size;
+        size_t _pos;
 
-			return *this;
-		}
+        Enumerator(const Array& a, size_t pos):
+            _array_loc(a._array_list.pointer()),
+            _size(a._size),
+            _pos(pos) {}
+    public:
+        friend class Array;
+
+        Enumerator(): _pos(0) {}
+        Enumerator(const Enumerator&) = default;
+        virtual ~Enumerator() = default;
+        Enumerator& operator=(const Enumerator&) = default;
+
+        const T& operator*() const {
+            return _array_loc[_pos];
+        }
+
+        T& operator*() {
+            return _array_loc[_pos];
+        }
+
+        const T* operator->() const {
+            return &_array_loc[_pos];
+        }
+
+        T* operator->() {
+            return &_array_loc[_pos];
+        }
+
+        Enumerator& operator++() {
+            ++_pos;
+            return *this;
+        }
+
+        Enumerator operator++(int) {
+            Enumerator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        Enumerator& operator--() {
+            _pos = _pos ? _size : _pos - 1;
+        }
+
+        Enumerator operator--(int) {
+            Enumerator temp = *this;
+            --(*this);
+            return temp;
+        }
+
+        Enumerator& operator+=(int pos) {
+            _pos = _pos + pos <= 0 ? _size : _pos + pos;
+        }
+
+        const Enumerator operator+(int pos) const {
+            Enumerator temp(*this);
+            temp += pos;
+            return temp;
+        }
+
+        Enumerator operator+(int pos) {
+            Enumerator temp(*this);
+            temp += pos;
+            return temp;
+        }
+
+        Enumerator& operator-=(int pos) {
+            *this += -pos;
+        }
+
+        const Enumerator operator-(int pos) const {
+            Enumerator temp(*this);
+            temp -= pos;
+            return temp;
+        }
+
+        Enumerator operator-(int pos) {
+            Enumerator temp(*this);
+            temp -= pos;
+            return temp;
+        }
+
+        bool operator==(const Enumerator& other) const {
+            return _array_loc == other._array_loc
+                && ((_pos >= _size && other._pos >= _size) || _pos == other._pos);
+        }
+
+        bool operator!=(const Enumerator& other) const {
+            return !(*this == other);
+        }
+    };
+
+    const Enumerator begin() const {
+        return Enumerator(*this, 0);
+    }
+
+    Enumerator begin() {
+        return Enumerator(*this, 0);
+    }
+
+    const Enumerator end() const {
+        return Enumerator(*this, _size);
+    }
 };
 
 #endif /* ARRAY_H_ */
