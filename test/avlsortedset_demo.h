@@ -12,9 +12,9 @@
 template <typename T>
 void
 Arrangements(
-    std::vector<T>& list,
-    std::vector<std::vector<T>>& result,
-    int low = 0
+    List<T>& list,
+    List<List<T>>& result,
+    size_t low = 0
 ) {
     if (low + 1 >= list.size()) {
         result.push_back(list);
@@ -38,22 +38,22 @@ Arrangements(
 }
 
 template <typename T>
-std::vector<std::vector<T>>
+List<List<T>>
 Arrangements(
-    const std::vector<T>& list
+    const List<T>& list
 ) {
-    std::vector<std::vector<T>> result;
+    List<List<T>> result;
     auto listCopy = list;
     Arrangements(listCopy, result);
     return result;
 }
 
 template <typename T>
-std::vector<avltree::NodeInfo<T>>
+List<avltree::NodeInfo<T>>
 FactorErrors(const SortedSet<T>& tree) {
-    auto list = tree.to_vector();
+    auto list = tree.to_list();
 
-    std::vector<avltree::NodeInfo<T>>
+    List<avltree::NodeInfo<T>>
     errors;
 
     for (auto& item : list)
@@ -69,7 +69,7 @@ template <
         = Compare<T>
 >
 bool
-InOrder(const std::vector<T>& list) {
+InOrder(const List<T>& list) {
     bool inOrder = true;
 
     for (size_t i = 0; i + 1 < list.size(); ++i)
@@ -79,9 +79,9 @@ InOrder(const std::vector<T>& list) {
 }
 
 template <typename T>
-std::vector<T>
+List<T>
 ToList(const SortedSet<T>& tree) {
-    std::vector<T> list;
+    List<T> list;
 
     tree.for_each([&](const T& item) -> void {
         list.push_back(item);
@@ -122,15 +122,15 @@ template <
 >
 bool
 Verify(
-    const std::vector<T>& inOrderList,
-    const std::vector<T>& arrangement,
+    const List<T>& inOrderList,
+    const List<T>& arrangement,
     void (*onPushComplete)(const SortedSet<T, R>&),
     void (*onRemoveComplete)(const SortedSet<T, R>&),
     void (*onPushFail)(const SortedSet<T, R>&, const T&),
     void (*onRemoveFail)(const SortedSet<T, R>&, const T&),
     void (*onFactorErrors)(const SortedSet<T, R>&, const T&),
     void (*onWrongSize)(const SortedSet<T, R>&, const T&, size_t size),
-    void (*onWrongOrder)(const SortedSet<T, R>&, const T&, const std::vector<T>&)
+    void (*onWrongOrder)(const SortedSet<T, R>&, const T&, const List<T>&)
 ) {
     bool wellFormed = true;
     SortedSet<T, R> tree;

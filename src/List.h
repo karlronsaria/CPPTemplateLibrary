@@ -48,7 +48,11 @@ public:
         clear();
     }
 
-    List(const List& other) {
+    List(const List& other):
+        _head(nullptr),
+        _tail(nullptr),
+        _size(0)
+	{
         *this = other;
     }
 
@@ -64,7 +68,11 @@ public:
         return *this;
     }
 
-    List(const std::initializer_list<T>& list) {
+    List(const std::initializer_list<T>& list):
+        _head(nullptr),
+        _tail(nullptr),
+        _size(0)
+    {
         *this = list;
     }
 
@@ -268,7 +276,6 @@ public:
 
     class Enumerator {
     private:
-        List* _list;
         Node* _node;
         Node* (*_prev)(Node*);
         Node* (*_next)(Node*);
@@ -285,26 +292,27 @@ public:
             return n;
         }
 
-        Enumerator(List* l, Node* n):
-            _list(l),
+        Enumerator(Node* n):
             _node(n),
             _prev(&default_prev),
             _next(&default_next) {}
 
-        Enumerator(List* l, Node* n, Node* (*prev)(Node*), Node* (*next)(Node*)):
-            _list(l),
+        Enumerator(Node* n, Node* (*prev)(Node*), Node* (*next)(Node*)):
             _node(n),
             _prev(prev),
             _next(next) {}
 
-        static Enumerator reverse(List* l, Node* n) {
-            return Enumerator(l, n, &default_next, &default_prev);
+        static Enumerator forward(Node* n) {
+            return Enumerator(n);
+        }
+
+        static Enumerator reverse(Node* n) {
+            return Enumerator(n, &default_next, &default_prev);
         }
     public:
         friend class List;
 
         Enumerator():
-            _list(nullptr),
             _node(nullptr),
             _prev(&ret),
             _next(&ret) {}
@@ -411,25 +419,26 @@ public:
     };
 
     const Enumerator begin() const {
-        return Enumerator(this, _head);
+        return Enumerator::forward(_head);
     }
 
     Enumerator begin() {
-        return Enumerator(this, _head);
+        return Enumerator::forward(_head);
     }
 
     const Enumerator begin_reverse() const {
-        return Enumerator::reverse(this, _tail);
+        return Enumerator::reverse(_tail);
     }
 
     Enumerator begin_reverse() {
-        return Enumerator::reverse(this, _tail);
+        return Enumerator::reverse(_tail);
     }
 
     const Enumerator end() const {
         return Enumerator();
     }
 
+    /*
     bool insert_after(Enumerator& it, const T& t) {
         if (this != it._list)
             return false;
@@ -499,6 +508,7 @@ public:
         --_size;
         return true;
     }
+    */
 };
 
 #endif /* LIST_H_ */

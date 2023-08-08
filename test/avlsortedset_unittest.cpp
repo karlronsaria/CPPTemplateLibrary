@@ -3,7 +3,7 @@
 
 namespace {
     TEST(SortedSet, SevenCharacterArrangements) {
-        std::vector<char> listInOrder
+        List<char> listInOrder
             = { 'a', 'b', 'c', 'd', 'e', 'f', 'g' };
 
         for (const auto& list : Arrangements(listInOrder)) {

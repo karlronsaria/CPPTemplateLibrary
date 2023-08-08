@@ -289,16 +289,16 @@ namespace avltree {
     >
     void to_list(
         Node<T, R>* n,
-        int index,
+        size_t index,
         List<avltree::NodeInfo<T>>& list
     ) {
-        int next = 2 * (index + 1);
+        size_t next = 2 * (index + 1);
 
         if (next + 1 > list.size())
             list.resize(next + 1);
 
         if (!n) {
-            list[index] = avltree::NodeInfo<T>{false, 0, T()};
+            list[index] = avltree::NodeInfo<T>{ false, 0, T() };
             return;
         }
 
