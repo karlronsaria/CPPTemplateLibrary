@@ -72,7 +72,7 @@ bool
 InOrder(const List<T>& list) {
     bool inOrder = true;
 
-    for (size_t i = 0; i + 1 < list.size(); ++i)
+    for (int i = 0; i + 1 < (int)list.size(); ++i)
         inOrder &= R(list[i], list[i + 1]) == -1;
 
     return inOrder;

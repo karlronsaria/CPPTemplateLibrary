@@ -1,6 +1,7 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include "scoped_ptr.h"
 #include "Aggregate.h"
 #include "Collection.h"
 #include <initializer_list>
@@ -14,19 +15,27 @@ private:
         Node* next = nullptr;
     };
 
-    Node* at(int pos) const {
+    struct Deque {
+        Node* _head = nullptr;
+        Node* _tail = nullptr;
+        size_t _size = 0L;
+    };
+
+    scoped_ptr<Deque> _list;
+
+    static Node* at(const Deque& list, int pos) {
         Node* n = nullptr;
         int i = 0;
 
         if (pos < 0) {
             i = -1;
-            n = _tail;
+            n = list._tail;
 
             while (i-- > pos)
                 n = n->prev;
         }
         else {
-            n = _head;
+            n = list._head;
 
             while (i++ < pos)
                 n = n->next;
@@ -35,43 +44,138 @@ private:
         return n;
     }
 
-    Node* _head;
-    Node* _tail;
-    size_t _size;
+    static void clear(Deque& list) {
+        switch (list._size) {
+        case 0:
+            break;
+        case 1:
+            delete list._head;
+            break;
+        default:
+            auto n = list._head->next;
+
+            while (n->next) {
+                delete n->prev;
+                n = n->next;
+            }
+
+            delete n->prev;
+            delete n;
+            break;
+        }
+    }
+
+    static void push_back(Deque& list, const T& t) {
+        bool hasAny = list._size;
+        ++list._size;
+
+        if (!hasAny) {
+            list._head = new Node{ t, nullptr, nullptr };
+            list._tail = list._head;
+            return;
+        }
+
+        auto n = new Node{ t, list._tail, nullptr };
+        list._tail->next = n;
+        list._tail = n;
+    }
+
+    static void push_front(Deque& list, const T& t) {
+        bool hasAny = list._size;
+        ++list._size;
+
+        if (!hasAny) {
+            list._head = new Node{ t, nullptr, nullptr };
+            list._tail = list._head;
+            return;
+        }
+
+        auto n = new Node{ t, nullptr, list._head };
+        list._head->prev = n;
+        list._tail = n;
+    }
+
+    static bool pop_back(Deque& list) {
+        if (!list._size)
+            return false;
+
+        auto n = list._head;
+        list._head = n->next;
+        list._head->prev = nullptr;
+        delete n;
+        --list._size;
+        return true;
+    }
+
+    static bool pop_front(Deque& list) {
+        if (!list._size)
+            return false;
+
+        auto n = list._tail;
+        list._tail = n->prev;
+        list._tail->next = nullptr;
+        delete n;
+        --list._size;
+        return false;
+    }
+
+    static void copy(Deque& list, Deque& o) {
+        clear(list);
+        auto n = o._head;
+
+        while (n) {
+            push_back(list, n->payload);
+            n = n->next;
+        }
+    }
+
+    static void insert(Deque& list, const T& t, size_t pos) {
+        auto next = list._head;
+        size_t i = 0;
+
+        while (i++ < pos)
+            next = next->next;
+
+        auto prev = next->prev;
+        auto n = new Node{ t, prev, next };
+        prev->next = n;
+        next->prev = n;
+        ++list._size;
+    }
+
+    static void remove(Deque& list, size_t pos) {
+        auto n = list._head;
+        size_t i = 0;
+
+        while (i++ < pos)
+            n = n->next;
+
+        n->prev->next = n->next;
+        n->next->prev = n->prev;
+        delete n;
+        --list._size;
+    }
 public:
     List():
-        _head(nullptr),
-        _tail(nullptr),
-        _size(0) {}
+        _list(new Deque()) {}
 
     virtual ~List() {
         clear();
     }
 
     List(const List& other):
-        _head(nullptr),
-        _tail(nullptr),
-        _size(0)
+        _list(new Deque())
     {
         *this = other;
     }
 
     List& operator=(const List& other) {
-        clear();
-        auto n = other._head;
-
-        while (n) {
-            push_back(n->payload);
-            n = n->next;
-        }
-
+        copy(*_list, *(Deque*)other._list);
         return *this;
     }
 
     List(const std::initializer_list<T>& list):
-        _head(nullptr),
-        _tail(nullptr),
-        _size(0)
+        _list(new Deque())
     {
         *this = list;
     }
@@ -86,7 +190,7 @@ public:
     }
 
     size_t size() const {
-        return _size;
+        return _list->_size;
     }
 
     bool any() const {
@@ -95,37 +199,26 @@ public:
 
     const T& front() const {
         // fails fast
-        return _head->payload;
+        return _list->_head->payload;
     }
 
     T& front() {
         // fails fast
-        return _head->payload;
+        return _list->_head->payload;
     }
 
     const T& back() const {
         // fails fast
-        return _tail->payload;
+        return _list->_tail->payload;
     }
 
     T& back() {
         // fails fast
-        return _tail->payload;
+        return _list->_tail->payload;
     }
 
     List& push_back(const T& t) {
-        bool hasAny = any();
-        ++_size;
-
-        if (!hasAny) {
-            _head = new Node{ t, nullptr, nullptr };
-            _tail = _head;
-            return *this;
-        }
-
-        auto n = new Node{ t, _tail, nullptr };
-        _tail->next = n;
-        _tail = n;
+        push_back(*_list, t);
         return *this;
     }
 
@@ -134,18 +227,7 @@ public:
     }
 
     List& push_front(const T& t) {
-        bool hasAny = any();
-        ++_size;
-
-        if (!hasAny) {
-            _head = new Node{ t, nullptr, nullptr };
-            _tail = _head;
-            return *this;
-        }
-
-        auto n = new Node{ t, nullptr, _head };
-        _head->prev = n;
-        _tail = n;
+        push_front(*_list, t);
         return *this;
     }
 
@@ -154,31 +236,15 @@ public:
     }
 
     bool pop_back() {
-        if (!any())
-            return false;
-
-        auto n = _head;
-        _head = n->next;
-        _head->prev = nullptr;
-        delete n;
-        --_size;
-        return true;
+        return pop_back(*_list);
     }
 
     bool pop_front() {
-        if (!any())
-            return false;
-
-        auto n = _tail;
-        _tail = n->prev;
-        _tail->next = nullptr;
-        delete n;
-        --_size;
-        return false;
+        return pop_front(*_list);
     }
 
     List& insert(const T& t, size_t pos) {
-        if (!any() || pos == _size) {
+        if (!any() || pos == size()) {
             push_back(t);
             return *this;
         }
@@ -188,89 +254,49 @@ public:
             return *this;
         }
 
-        if (pos > _size)
+        if (pos > size())
             return *this;
 
-        auto next = _head;
-        size_t i = 0;
-
-        while (i++ < pos)
-            next = next->next;
-
-        auto prev = next->prev;
-        auto n = new Node{ t, prev, next };
-        prev->next = n;
-        next->prev = n;
-        ++_size;
+        insert(*_list, t, pos);
         return *this;
     }
 
     bool remove(size_t pos) {
-        if (pos >= _size)
+        if (pos >= size())
             return false;
 
         if (!pos) {
             return pop_front();
         }
 
-        if (pos == _size - 1) {
+        if (pos == size() - 1) {
             return pop_back();
         }
 
-        auto n = _head;
-        size_t i = 0;
-
-        while (i++ < pos)
-            n = n->next;
-
-        n->prev->next = n->next;
-        n->next->prev = n->prev;
-        delete n;
-        --_size;
+        remove(*_list, pos);
         return true;
     }
 
     List& clear() {
-        switch (_size) {
-        case 0:
-            break;
-        case 1:
-            delete _head;
-            break;
-        default:
-            auto n = _head->next;
-
-            while (n->next) {
-                delete n->prev;
-                n = n->next;
-            }
-
-            delete n->prev;
-            delete n;
-            break;
-        }
-
-        _size = 0;
-        _head = nullptr;
-        _tail = nullptr;
+        clear(*_list);
         return *this;
     }
 
     const T& operator[](int pos) const {
         // fails fast
-        return at(pos)->payload;
+        return at(*_list, pos)->payload;
     }
 
     T& operator[](int pos) {
         // fails fast
-        return at(pos)->payload;
+        return at(*_list, pos)->payload;
     }
 
     List& resize(size_t pos) {
-        while (_size < pos)
+        while (size() < pos)
             push_back();
 
-        while (_size > pos)
+        while (size() > pos)
             pop_back();
 
         return *this;
@@ -278,6 +304,9 @@ public:
 
     class Enumerator {
     private:
+        typedef typename scoped_ptr<Deque>::locator list_ptr;
+
+        list_ptr _list;
         Node* _node;
         Node* (*_prev)(Node*);
         Node* (*_next)(Node*);
@@ -294,27 +323,30 @@ public:
             return n;
         }
 
-        Enumerator(Node* n):
+        Enumerator(list_ptr l, Node* n):
+            _list(l),
             _node(n),
             _prev(&default_prev),
             _next(&default_next) {}
 
-        Enumerator(Node* n, Node* (*prev)(Node*), Node* (*next)(Node*)):
+        Enumerator(list_ptr l, Node* n, Node* (*prev)(Node*), Node* (*next)(Node*)):
+            _list(l),
             _node(n),
             _prev(prev),
             _next(next) {}
 
-        static Enumerator forward(Node* n) {
-            return Enumerator(n);
+        static Enumerator forward(list_ptr l, Node* n) {
+            return Enumerator(l, n);
         }
 
-        static Enumerator reverse(Node* n) {
-            return Enumerator(n, &default_next, &default_prev);
+        static Enumerator reverse(list_ptr l, Node* n) {
+            return Enumerator(l, n, &default_next, &default_prev);
         }
     public:
         friend class List;
 
         Enumerator():
+            _list(nullptr),
             _node(nullptr),
             _prev(&ret),
             _next(&ret) {}
@@ -421,33 +453,32 @@ public:
     };
 
     const Enumerator begin() const {
-        return Enumerator::forward(_head);
+        return Enumerator::forward(_list.pointer(), _list->_head);
     }
 
     Enumerator begin() {
-        return Enumerator::forward(_head);
+        return Enumerator::forward(_list.pointer(), _list->_head);
     }
 
     const Enumerator begin_reverse() const {
-        return Enumerator::reverse(_tail);
+        return Enumerator::reverse(_list.pointer(), _list->_tail);
     }
 
     Enumerator begin_reverse() {
-        return Enumerator::reverse(_tail);
+        return Enumerator::reverse(_list.pointer(), _list->_tail);
     }
 
     const Enumerator end() const {
         return Enumerator();
     }
 
-    /*
     bool insert_after(Enumerator& it, const T& t) {
-        if (this != it._list)
+        if (_list != it._list)
             return false;
 
         if (!any()) {
             push_back(t);
-            it._node = _tail;
+            it._node = _list->_tail;
             return true;
         }
 
@@ -457,19 +488,19 @@ public:
             return false;
 
         Node* m = new Node{ t, n, n->next };
-        (n->next ? n->next->prev : _tail) = m;
+        (n->next ? n->next->prev : _list->_tail) = m;
         n->next = m;
-        ++_size;
+        ++_list->_size;
         return true;
     }
 
     bool insert_before(Enumerator& it, const T& t) {
-        if (this != it._list)
+        if (_list != it._list)
             return false;
 
         if (!any()) {
             push_front();
-            it._node = _head;
+            it._node = _list->_head;
             return true;
         }
 
@@ -479,27 +510,27 @@ public:
             return false;
 
         Node* m = new Node{ t, n->prev, n };
-        (n->prev ? n->prev->next : _head) = m;
+        (n->prev ? n->prev->next : _list->_head) = m;
         n->prev = m;
-        ++_size;
+        ++_list->_size;
         return true;
     }
 
     bool remove(Enumerator& it) {
-        if (this != it._list || !any() || !it._node)
+        if (_list != it._list || !any() || !it._node)
             return false;
 
         Node* n = it._node;
 
         if (!n->prev) {
             bool success = pop_front();
-            it._node = _head;
+            it._node = _list->_head;
             return success;
         }
 
         if (!n->next) {
             bool success = pop_back();
-            it._node = _tail;
+            it._node = _list->_tail;
             return success;
         }
 
@@ -507,10 +538,9 @@ public:
         n->next->prev = n->prev;
         it._node = n->next;
         delete n;
-        --_size;
+        --_list->_size;
         return true;
     }
-    */
 };
 
 #endif /* LIST_H_ */
