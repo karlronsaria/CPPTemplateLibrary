@@ -52,7 +52,7 @@ public:
         _head(nullptr),
         _tail(nullptr),
         _size(0)
-	{
+    {
         *this = other;
     }
 
@@ -90,7 +90,7 @@ public:
     }
 
     bool any() const {
-        return _size;
+        return size();
     }
 
     const T& front() const {
@@ -201,6 +201,7 @@ public:
         auto n = new Node{ t, prev, next };
         prev->next = n;
         next->prev = n;
+        ++_size;
         return *this;
     }
 
@@ -225,6 +226,7 @@ public:
         n->prev->next = n->next;
         n->next->prev = n->prev;
         delete n;
+        --_size;
         return true;
     }
 
@@ -253,7 +255,7 @@ public:
         _tail = nullptr;
         return *this;
     }
-public:
+
     const T& operator[](int pos) const {
         // fails fast
         return at(pos)->payload;
