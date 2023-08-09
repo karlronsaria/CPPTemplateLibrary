@@ -66,7 +66,7 @@ FactorErrors(const SortedSet<T>& tree) {
 template <
     typename T,
     int (*R)(const T &, const T &)
-        = Compare<T>
+        = sort::Compare<T>
 >
 bool
 InOrder(const List<T>& list) {
@@ -118,7 +118,7 @@ def verify:
 template <
     typename T,
     int (*R)(const T &, const T &)
-        = Compare<T>
+        = sort::Compare<T>
 >
 bool
 Verify(

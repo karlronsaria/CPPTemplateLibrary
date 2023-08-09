@@ -1,6 +1,8 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include "arithmetic.h"
+#include "enumerable.h"
 #include "scoped_ptr.h"
 #include "Aggregate.h"
 #include "Collection.h"
@@ -383,9 +385,7 @@ public:
 
         Enumerator operator++(int) {
             // fails fast
-            Enumerator temp = *this;
-            ++(*this);
-            return temp;
+            return arithmetic::PostIncr(*this);
         }
 
         Enumerator& operator--() {
@@ -396,9 +396,7 @@ public:
 
         Enumerator operator--(int) {
             // fails fast
-            Enumerator temp = *this;
-            --(*this);
-            return temp;
+            return arithmetic::PostDecr(*this);
         }
 
         Enumerator& operator+=(int pos) {
@@ -420,27 +418,19 @@ public:
         }
 
         const Enumerator operator+(int pos) const {
-            Enumerator temp(*this);
-            temp += pos;
-            return temp;
+            return arithmetic::Plus(*this, pos);
         }
 
         Enumerator operator+(int pos) {
-            Enumerator temp(*this);
-            temp += pos;
-            return temp;
+            return arithmetic::Plus(*this, pos);
         }
 
         const Enumerator operator-(int pos) const {
-            Enumerator temp(*this);
-            temp -= pos;
-            return temp;
+            return arithmetic::Plus(*this, -pos);
         }
 
         Enumerator operator-(int pos) {
-            Enumerator temp(*this);
-            temp -= pos;
-            return temp;
+            return arithmetic::Plus(*this, -pos);
         }
 
         bool operator==(const Enumerator& other) const {
@@ -540,6 +530,10 @@ public:
         delete n;
         --_list->_size;
         return true;
+    }
+
+    std::string to_string(const std::string& delim) const {
+        return enumerable::ToString(*this, delim);
     }
 };
 

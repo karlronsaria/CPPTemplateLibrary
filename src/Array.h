@@ -8,11 +8,13 @@
 #ifndef ARRAY_H_
 #define ARRAY_H_
 
+#include "arithmetic.h"
+#include "enumerable.h"
 #include "scoped_ptr.h"
 #include "Aggregate.h"
 
 template <typename T>
-class Array: public Aggregate<T> {
+class Array: public Collection, Aggregate<T> {
 private:
     scoped_ptr<T> _array_list;
     size_t _size;
@@ -69,6 +71,10 @@ public:
     virtual ~Array() {}
 
     virtual size_t size() const {
+        return _size;
+    }
+
+    virtual size_t any() const {
         return _size;
     }
 
@@ -154,9 +160,7 @@ public:
         }
 
         Enumerator operator++(int) {
-            Enumerator temp = *this;
-            ++(*this);
-            return temp;
+            return arithmetic::PostIncr(*this);
         }
 
         Enumerator& operator--() {
@@ -164,9 +168,7 @@ public:
         }
 
         Enumerator operator--(int) {
-            Enumerator temp = *this;
-            --(*this);
-            return temp;
+            return arithmetic::PostDecr(*this);
         }
 
         Enumerator& operator+=(int pos) {
@@ -174,15 +176,11 @@ public:
         }
 
         const Enumerator operator+(int pos) const {
-            Enumerator temp(*this);
-            temp += pos;
-            return temp;
+            return arithmetic::Plus(*this, pos);
         }
 
         Enumerator operator+(int pos) {
-            Enumerator temp(*this);
-            temp += pos;
-            return temp;
+            return arithmetic::Plus(*this, pos);
         }
 
         Enumerator& operator-=(int pos) {
@@ -190,15 +188,11 @@ public:
         }
 
         const Enumerator operator-(int pos) const {
-            Enumerator temp(*this);
-            temp -= pos;
-            return temp;
+            return arithmetic::Plus(*this, -pos);
         }
 
         Enumerator operator-(int pos) {
-            Enumerator temp(*this);
-            temp -= pos;
-            return temp;
+            return arithmetic::Plus(*this, -pos);
         }
 
         bool operator==(const Enumerator& other) const {
@@ -221,6 +215,10 @@ public:
 
     const Enumerator end() const {
         return Enumerator(*this, _size);
+    }
+
+    std::string to_string(const std::string& delim) const {
+        return enumerable::ToString(*this, delim);
     }
 };
 

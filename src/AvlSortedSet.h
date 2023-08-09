@@ -2,17 +2,14 @@
 #define AVLSORTEDSET_H_
 
 #include "avltree.h"
-
-template <typename T>
-int Compare(const T& first, const T& secnd) {
-    return (first > secnd) - (first < secnd);
-}
+#include "sort.h"
+#include "Collection.h"
 
 template <
     typename T,
-    int (*R)(const T&, const T&) = Compare<T>
+    int (*R)(const T&, const T&) = sort::Compare<T>
 >
-class SortedSet {
+class SortedSet: public Collection {
 private:
     typedef avltree::Node<T, R> N;
     N* _root;
@@ -145,9 +142,9 @@ public:
 template <
     typename KeyT,
     typename ValueT,
-    int (*R)(const KeyT&, const KeyT&) = Compare<KeyT>
+    int (*R)(const KeyT&, const KeyT&) = sort::Compare<KeyT>
 >
-class SortedMap {
+class SortedMap: public Collection {
 private:
     struct Pair {
         KeyT key;
