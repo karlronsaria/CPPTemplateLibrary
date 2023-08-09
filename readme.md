@@ -33,6 +33,9 @@ Numeric types with modular arithmetic
 
 ## Considerations
 
+- hash table
+  - set
+  - map
 - skip list
 - B tree
 - graph

@@ -70,7 +70,7 @@ class ForwardList: public Collection
 
 	    		  { return unarynode::End(_head)->content(); }
 
-		bool   empty () const { return *_size == 0; }
+		bool   any   () const { return *_size; }
 		size_t size  () const { return *_size; }
 
 		void   clear ()       { _head.deallocate(); *_size = 0; }
@@ -89,7 +89,7 @@ class ForwardList: public Collection
 			listnode::Print(_head);
 		}
 
-		class iterator
+		class Enumerator
 		{
 			private:
 
@@ -102,18 +102,18 @@ class ForwardList: public Collection
 
 			public:
 
-				      iterator();
-			         ~iterator();
+				      Enumerator();
+			         ~Enumerator();
 
-				      iterator     & operator=  (const iterator &);
+				      Enumerator     & operator=  (const Enumerator &);
 				      Content_Type & operator*  ();
 				const Content_Type & operator*  ()       const;
 				      Content_Type * operator-> ();
 				const Content_Type * operator-> ()       const;
-				      iterator       operator++ ();
-				      iterator       operator++ (int);
-				      iterator     & operator+= (size_t);
-				const iterator       operator+  (size_t) const;
+				      Enumerator       operator++ ();
+				      Enumerator       operator++ (int);
+				      Enumerator     & operator+= (size_t);
+				const Enumerator       operator+  (size_t) const;
 
 				void         insert_after ();
 				void         insert_after (const Content_Type &);
@@ -122,8 +122,8 @@ class ForwardList: public Collection
 				friend class ForwardList;
 		};
 
-		iterator begin () const;
-		iterator end   () const;
+		Enumerator begin () const;
+		Enumerator end   () const;
 };
 
 
@@ -135,7 +135,7 @@ class ForwardList: public Collection
  *****************************/
 
 template <typename C>
-void ForwardList<C>::iterator::insert_after(node_ptr & node)
+void ForwardList<C>::Enumerator::insert_after(node_ptr & node)
 {
 	if(!_pointer.is_null())
 	{
@@ -156,16 +156,16 @@ void ForwardList<C>::iterator::insert_after(node_ptr & node)
 // Constructor & Destructor
 
 template <typename C>
-ForwardList<C>::iterator::iterator() {}
+ForwardList<C>::Enumerator::Enumerator() {}
 
 template <typename C>
-ForwardList<C>::iterator::~iterator() {}
+ForwardList<C>::Enumerator::~Enumerator() {}
 
 // Operators
 
 template <typename C>
-typename ForwardList<C>::iterator &
-ForwardList<C>::iterator::operator=(const iterator & other)
+typename ForwardList<C>::Enumerator &
+ForwardList<C>::Enumerator::operator=(const Enumerator & other)
 {
 	_pointer   = other._pointer;
 	_list_size = other._list_size;
@@ -174,36 +174,36 @@ ForwardList<C>::iterator::operator=(const iterator & other)
 }
 
 template <typename C>
-C & ForwardList<C>::iterator::operator*()
+C & ForwardList<C>::Enumerator::operator*()
 {
 	assert(_pointer);
 	return _pointer->content();
 }
 
 template <typename C>
-const C & ForwardList<C>::iterator::operator*() const
+const C & ForwardList<C>::Enumerator::operator*() const
 {
 	assert(_pointer);
 	return _pointer->content();
 }
 
 template <typename C>
-C * ForwardList<C>::iterator::operator->()
+C * ForwardList<C>::Enumerator::operator->()
 {
 	assert(_pointer);
 	return &_pointer->content();
 }
 
 template <typename C>
-const C * ForwardList<C>::iterator::operator->() const
+const C * ForwardList<C>::Enumerator::operator->() const
 {
 	assert(_pointer);
 	return &_pointer->content();
 }
 
 template <typename C>
-typename ForwardList<C>::iterator
-ForwardList<C>::iterator::operator++()
+typename ForwardList<C>::Enumerator
+ForwardList<C>::Enumerator::operator++()
 {
 	_pointer = _pointer->next();
 
@@ -211,10 +211,10 @@ ForwardList<C>::iterator::operator++()
 }
 
 template <typename C>
-typename ForwardList<C>::iterator
-ForwardList<C>::iterator::operator++(int)
+typename ForwardList<C>::Enumerator
+ForwardList<C>::Enumerator::operator++(int)
 {
-	iterator temp;
+	Enumerator temp;
 
 	temp._pointer = _pointer;
 
@@ -224,8 +224,8 @@ ForwardList<C>::iterator::operator++(int)
 }
 
 template <typename C>
-typename ForwardList<C>::iterator &
-ForwardList<C>::iterator::operator+=(size_t distance)
+typename ForwardList<C>::Enumerator &
+ForwardList<C>::Enumerator::operator+=(size_t distance)
 {
 	unarynode::GetPosition(_pointer, distance, _pointer);
 
@@ -233,8 +233,8 @@ ForwardList<C>::iterator::operator+=(size_t distance)
 }
 
 template <typename C>
-const typename ForwardList<C>::iterator
-ForwardList<C>::iterator::operator+(size_t distance) const
+const typename ForwardList<C>::Enumerator
+ForwardList<C>::Enumerator::operator+(size_t distance) const
 {
 	node_loc temp;
 
@@ -244,7 +244,7 @@ ForwardList<C>::iterator::operator+(size_t distance) const
 // List-changing Methods
 
 template <typename C>
-void ForwardList<C>::iterator::insert_after()
+void ForwardList<C>::Enumerator::insert_after()
 {
 	node_ptr node;
 
@@ -254,7 +254,7 @@ void ForwardList<C>::iterator::insert_after()
 }
 
 template <typename C>
-void ForwardList<C>::iterator::insert_after(const C & content)
+void ForwardList<C>::Enumerator::insert_after(const C & content)
 {
 	node_ptr node;
 
@@ -266,7 +266,7 @@ void ForwardList<C>::iterator::insert_after(const C & content)
 }
 
 template <typename C>
-C ForwardList<C>::iterator::remove_after()
+C ForwardList<C>::Enumerator::remove_after()
 {
 	if(!_pointer.is_null() && !_pointer->next().is_null())
 	{
@@ -381,12 +381,12 @@ C ForwardList<C>::pop_back()
 	return unarynode::PopBack(_head);
 }
 
-// - - Returning Iterators
+// - - Returning Enumerators
 
 template <typename C>
-typename ForwardList<C>::iterator ForwardList<C>::begin() const
+typename ForwardList<C>::Enumerator ForwardList<C>::begin() const
 {
-	iterator temp;
+	Enumerator temp;
 
 	temp._pointer   = _head;
 	temp._list_size = _size;
@@ -395,9 +395,9 @@ typename ForwardList<C>::iterator ForwardList<C>::begin() const
 }
 
 template <typename C>
-typename ForwardList<C>::iterator ForwardList<C>::end() const
+typename ForwardList<C>::Enumerator ForwardList<C>::end() const
 {
-	iterator temp;
+	Enumerator temp;
 
 	temp._pointer   = End(_head);
 	temp._list_size = _size;
