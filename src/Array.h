@@ -12,6 +12,7 @@
 #include "enumerable.h"
 #include "scoped_ptr.h"
 #include "Aggregate.h"
+#include "Collection.h"
 
 template <typename T>
 class Array: public Collection, Aggregate<T> {
@@ -74,7 +75,7 @@ public:
         return _size;
     }
 
-    virtual size_t any() const {
+    virtual bool any() const {
         return _size;
     }
 

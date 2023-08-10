@@ -10,66 +10,44 @@
 
 #include "Modular.h"
 
-class modular_int: public Modular<int>
-{
-	public:
+class modular_int: public Modular<int> {
+public:
+    virtual ~modular_int() = default;
+    using Modular<int>::operator=;
 
-		modular_int (int modulus):
-						Modular<int>::Modular(modulus) {};
-		modular_int (int lowerBound, int upperBound):
-						Modular<int>::Modular(lowerBound, upperBound) {};
-		modular_int (const modular_int &object):
-						Modular<int>::Modular(object) {};
-	   ~modular_int () {};
+    modular_int(int m):
+        Modular<int>::Modular(m) {}
 
-	    using Modular<int>::operator=;
-//	    modular_int & operator=  (int number);  /* A workaround. */
+    modular_int(int t, int m):
+        Modular<int>::Modular(t, m) {}
 
-		modular_int & operator++ ();
-		modular_int   operator++ (int);
-		modular_int & operator-- ();
-		modular_int   operator-- (int);
+    modular_int(const modular_int&) = default;
+
+    modular_int& operator++() { add(1); return *this; }
+    modular_int& operator--() { add(-1); return *this; }
+    modular_int operator++(int);
+    modular_int operator--(int);
 };
 
-//modular_int & modular_int::operator=(int number)
-//{
-//	(*this)(number);
-//
-//	return *this;
-//}
+template <int T, int M>
+class mod: public modular_int {
+public:
+	virtual ~mod() = default;
+	using modular_int::operator=;
+	mod(): modular_int(T, M) {}
+	mod(const mod&) = default;
+};
 
-modular_int & modular_int::operator++()
-{
-   *this += 1;
-
-	return *this;
+modular_int modular_int::operator++(int) {
+    modular_int temp(*this);
+    ++*this;
+    return temp;
 }
 
-modular_int modular_int::operator++(int)
-{
-	modular_int temp(*this);
-
-	++*this;
-
-	return temp;
+modular_int modular_int::operator--(int) {
+    modular_int temp = *this;
+    --*this;
+    return temp;
 }
-
-modular_int & modular_int::operator--()
-{
-   *this -= 1;
-
-	return *this;
-}
-
-modular_int modular_int::operator--(int)
-{
-	modular_int temp = *this;
-
-	--*this;
-
-	return temp;
-}
-
-
 
 #endif /* MODULAR_INT_H_ */
