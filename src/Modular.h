@@ -30,6 +30,7 @@ protected:
     }
 public:
     virtual ~Modular() = default;
+    Modular() = delete;
 
     Modular(const Data& terminal, const Data& modulus):
         _terminal(terminal),
@@ -51,7 +52,6 @@ public:
     const Data& period() const { return alg::abs(_modulus - _terminal); }
     const Data& conjugate() const { return _modulus - _value; }
     const Data& cycle(const Data&) const;
-    std::string to_string() const;
 
     Modular& operator+=(const Data& n) { return add(n); }
     Modular& operator-=(const Data& n) { return *this += -n; }
@@ -88,7 +88,28 @@ public:
     bool operator>=(const Data& n) const { return _value >= n; }
     bool operator<(const Data& n) const { return _value < n; }
     bool operator>(const Data& n) const { return _value > n; }
+
+    std::string to_string() const;
+
+    std::ostream& operator<<(std::ostream& out) const {
+        return out << to_string();
+    }
+
+    template <typename T>
+    friend std::ostream& operator<<(std::ostream&, const Modular<T>&);
 };
+
+template <typename D>
+std::string Modular<D>::to_string() const {
+    std::ostringstream oss;
+    oss << _value;
+    return oss.str();
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const Modular<T>& o) {
+    return out << o.to_string();
+}
 
 template <typename D>
 const D& Modular<D>::cycle(const D& number) const {
@@ -96,13 +117,6 @@ const D& Modular<D>::cycle(const D& number) const {
 
     return number % p
         + ((_value < _terminal) - (_value >= _modulus)) * p;
-}
-
-template <typename D>
-std::string Modular<D>::to_string() const {
-    std::ostringstream oss;
-    oss << _value;
-    return oss.str();
 }
 
 template <typename D>

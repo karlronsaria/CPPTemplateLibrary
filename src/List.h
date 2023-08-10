@@ -532,9 +532,21 @@ public:
         return true;
     }
 
-    std::string to_string(const std::string& delim) const {
+    std::string to_string(const std::string& delim = " ") const {
         return enumerable::ToString(*this, delim);
     }
+
+    std::ostream& operator<<(std::ostream& out) const {
+        return out << to_string();
+    }
+
+    template <typename S>
+    friend std::ostream& operator<<(std::ostream&, const List<S>&);
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const List<T>& o) {
+    return out << o.to_string();
+}
 
 #endif /* LIST_H_ */

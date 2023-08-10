@@ -218,9 +218,21 @@ public:
         return Enumerator(*this, _size);
     }
 
-    std::string to_string(const std::string& delim) const {
+    std::string to_string(const std::string& delim = " ") const {
         return enumerable::ToString(*this, delim);
     }
+
+    std::ostream& operator<<(std::ostream& out) const {
+        return out << to_string();
+    }
+
+    template <typename S>
+    friend std::ostream& operator<<(std::ostream&, const Array<S>&);
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const Array<T>& o) {
+    return out << o.to_string();
+}
 
 #endif /* ARRAY_H_ */

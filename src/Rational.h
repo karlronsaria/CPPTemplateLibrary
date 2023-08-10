@@ -8,7 +8,6 @@
 #ifndef RATIONAL_H_
 #define RATIONAL_H_
 
-#include <iostream>
 #include <sstream>
 #include <limits>
 #include "algebra.h"
@@ -16,291 +15,292 @@
 using namespace alg;
 
 template <typename Data>
-class Rational: private IntegralClass<Data>
-{
-    public:
+class Rational: private IntegralClass<Data> {
+public:
+    enum RatioForm {
+        SIMPLIFIED,
+        UNSIMPLIFIED
+    };
+private:
+    Data _numer;
+    Data _denom;
+    RatioForm _form;
+protected:
+    /*******************************
+     * --- Protected Functions --- *
+     *******************************/
 
-        enum RatioForm
-        {
-            SIMPLIFIED,
-            UNSIMPLIFIED
-        };
+    // Accessors
 
-    private:
+    template <typename Type>
+    void numericOperation(
+        const Type,
+        Rational<long> &,
+        Rational<long> &
+    ) const;
 
-        Data _numer;
-        Data _denom;
-        RatioForm _form;
+    // Mutators
 
-    protected:
+    void set_denom(const Data &);
 
-        /*******************************
-         * --- Protected Functions --- *
-         *******************************/
+public:
+
+    /*************************************
+     * --- Constructors & Destructor --- *
+     *************************************/
+
+    // Destructor
+
+    virtual ~Rational() = default;
+
+    // Standard Constructors
+
+    Rational();
+    Rational(const Rational &) = default;
+
+    // Value-setting Constructors
+
+    Rational(const Data &);
+    Rational(const Data &, const Data &);
+    Rational(const Data &, const Data &, const RatioForm &);
+    Rational(const RatioForm &);
+
+    template <typename Numeric_Type>
+    Rational(const Numeric_Type &);
 
-        // Accessors
+    /*********************
+     * --- Accessors --- *
+     *********************/
+
+    // Standard Accessors
+
+    const RatioForm & form() const {
+        return _form;
+    }
+
+    const Data & numer() const;
+    const Data & denom() const;
+
+    // Calculations
+
+    const float & to_float() const;
+    const double & to_double() const;
+    const long double & to_long_double() const;
+    const Rational simplify() const;
+    const Rational reciprocal() const;
+    bool commons(const Rational&, Data& denom, Data& numer1, Data& numer2) const;
+
+    // Verifiers
+
+    bool is_whole() const;
+    bool is_proper() const;
+    bool common_with(const Rational &) const;
 
-        template <typename Type>
-        void numericOperation(
-            const Type,
-            Rational<long> &,
-            Rational<long> &
-        ) const;
+    // Arithmetic
 
-        // Mutators
+    const Rational add(const Rational &) const;
+    const Rational subtract(const Rational &) const;
+    const Rational multiply(const Rational &) const;
+    const Rational divide(const Rational &) const throw(const char *);
 
-        void set_denom(const Data &);
+    template <typename Type>
+    static const Rational rationalize(const Rational<Type> &);
 
-    public:
+    static const Rational rationalize(float);
 
-        /*************************************
-         * --- Constructors & Destructor --- *
-         *************************************/
+    /****************************
+     * --- Friend Functions --- *
+     ****************************/
 
-        // Standard Constructors
+    template <typename Numeric_Type>
+    friend bool are_common(
+        const Rational<Numeric_Type> &,
+        const Rational<Numeric_Type> &
+    );
 
-        Rational();
-        Rational(const Rational &) = default;
+    template <typename Numeric_Type>
+    friend Rational<Numeric_Type> abs(
+        const Rational<Numeric_Type> &
+    );
 
-        // Value-setting Constructors
+    template <typename Numeric_Type>
+    friend float sqrt(
+        const Rational<Numeric_Type> &
+    );
 
-        Rational(const Data &);
-        Rational(const Data &, const Data &);
-        Rational(const Data &, const Data &, const RatioForm &);
-        Rational(const RatioForm &);
+    template <typename Type_1, typename Type_2>
+    friend float pow(
+        const Type_2 &,
+        const Rational<Type_1> &
+    );
 
-        template <typename Numeric_Type>
-        Rational(const Numeric_Type &);
+    template <typename Type_1, typename Type_2>
+    friend float pow(
+        const Rational<Type_1> &,
+        const Type_2 &
+    );
 
-        // Destructor
+    template <typename Type_1, typename Type_2>
+    friend float pow(
+        const Rational<Type_1> &,
+        const Rational<Type_2> &
+    );
 
-        ~Rational() = default;
+    template <typename Numeric_Type>
+    friend float cos(
+        const Rational<Numeric_Type> &
+    );
 
+    template <typename Numeric_Type>
+    friend float sin(
+        const Rational<Numeric_Type> &
+    );
 
-        /*********************
-         * --- Accessors --- *
-         *********************/
+    template <typename Numeric_Type>
+    friend float exp(
+        const Rational<Numeric_Type> &
+    );
 
-        // Standard Accessors
+    /*****************************************
+     * --- Typecast Conversion Operators --- *
+     *****************************************/
 
-        // // todo
-        // const RatioForm & form() const;
+    // Convert Object to Other Type
 
-        const RatioForm & form() const {
-            return _form;
-        }
+    operator int() const;
+    operator long();
+    operator long long();
+    operator float();
+    operator double();
+    operator long double ();
 
-        const Data & numer() const;
-        const Data & denom() const;
+    operator Rational<int>() const;
+    operator Rational<long int>() const;
+    operator Rational<long long int> () const;
 
-        // Calculations
+    /********************************
+     * --- Assignment Operators --- *
+     ********************************/
 
-        const float & to_float() const;
-        const double & to_double() const;
-        const long double & to_long_double() const;
-        const Rational simplify() const;
-        const Rational reciprocal() const;
-        bool commons(const Rational&, Data& denom, Data& numer1, Data& numer2) const;
+    template <typename Numeric_Type>
+    Rational & operator=(const Numeric_Type &);
 
-        // Verifiers
+    template <typename Numeric_Type>
+    Rational & operator=(const Rational<Numeric_Type> &);
 
-        bool is_whole() const;
-        bool is_proper() const;
-        bool common_with(const Rational &) const;
+    /********************************
+     * --- Arithmetic Operators --- *
+     ********************************/
 
-        // Arithmetic
+    // Compound Arithmetic (Number)
 
-        const Rational add(const Rational &) const;
-        const Rational subtract(const Rational &) const;
-        const Rational multiply(const Rational &) const;
-        const Rational divide(const Rational &) const throw(const char *);
+    template <typename Numeric_Type>
+    Rational & operator+=(const Numeric_Type &);
 
-        template <typename Type>
-        static const Rational rationalize(const Rational<Type> &);
-
-        static const Rational rationalize(float);
-
-        /****************************
-         * --- Friend Functions --- *
-         ****************************/
+    template <typename Numeric_Type>
+    Rational & operator-=(const Numeric_Type &);
 
-        template <typename Numeric_Type>
-        friend bool are_common(
-            const Rational<Numeric_Type> &,
-            const Rational<Numeric_Type> &
-        );
+    template <typename Numeric_Type>
+    Rational & operator*=(const Numeric_Type &);
 
-        template <typename Numeric_Type>
-        friend Rational<Numeric_Type> abs(
-            const Rational<Numeric_Type> &
-        );
+    template <typename Numeric_Type>
+    Rational & operator/=(const Numeric_Type &);
 
-        template <typename Numeric_Type>
-        friend float sqrt(
-            const Rational<Numeric_Type> &
-        );
+    // Compound Arithmetic (Object)
 
-        template <typename Type_1, typename Type_2>
-        friend float pow(
-            const Type_2 &,
-            const Rational<Type_1> &
-        );
+    Rational & operator%=(const Rational &);
 
-        template <typename Type_1, typename Type_2>
-        friend float pow(
-            const Rational<Type_1> &,
-            const Type_2 &
-        );
+    // Arithmetic Constant (Unary Opposite)
 
-        template <typename Type_1, typename Type_2>
-        friend float pow(
-            const Rational<Type_1> &,
-            const Rational<Type_2> &
-        );
+    const Rational operator-() const;
 
-        template <typename Numeric_Type>
-        friend float cos(
-            const Rational<Numeric_Type> &
-        );
+    // Arithmetic Constant (Number)
 
-        template <typename Numeric_Type>
-        friend float sin(
-            const Rational<Numeric_Type> &
-        );
+    template <typename Numeric_Type>
+    const Rational operator+(const Numeric_Type &) const;
 
-        template <typename Numeric_Type>
-        friend float exp(
-            const Rational<Numeric_Type> &
-        );
+    template <typename Numeric_Type>
+    const Rational operator-(const Numeric_Type &) const;
 
+    template <typename Numeric_Type>
+    const Rational operator*(const Numeric_Type &) const;
 
-        /*****************************************
-         * --- Typecast Conversion Operators --- *
-         *****************************************/
+    template <typename Numeric_Type>
+    const Rational operator/(const Numeric_Type &) const;
 
-        // Convert Object to Other Type
+    // Arithmetic Constant (Object)
 
-        operator int() const;
-        operator long();
-        operator long long();
-        operator float();
-        operator double();
-        operator long double ();
+    const Rational operator%(const Rational &) const;
 
-        operator Rational<int>() const;
-        operator Rational<long int>() const;
-        operator Rational<long long int> () const;
+    // Arithmetic Constant (Number & Object)
 
+    template <typename Numeric_Type>
+    friend const Rational<Numeric_Type> operator+(
+        int number,
+        const Rational<Numeric_Type> &
+    );
 
-        /***********************************
-         * --- Output Stream Operators --- *
-         ***********************************/
+    template <typename Numeric_Type>
+    friend const Rational<Numeric_Type> operator-(
+        int number,
+        const Rational<Numeric_Type> &
+    );
 
-        std::ostream & operator<<(
-            std::ostream &
-        ) const;
+    template <typename Numeric_Type>
+    friend const Rational<Numeric_Type> operator*(
+        int number,
+        const Rational<Numeric_Type> &
+    );
 
-        template <typename Numeric_Type>
-        friend std::ostream & operator<<(
-            std::ostream &,
-            const Rational<Numeric_Type> &
-        );
+    template <typename Numeric_Type>
+    friend const Rational<Numeric_Type> operator/(
+        int number,
+        const Rational<Numeric_Type> &
+    );
 
-        /********************************
-         * --- Assignment Operators --- *
-         ********************************/
+    /********************************
+     * --- Relational Operators --- *
+     ********************************/
 
-        template <typename Numeric_Type>
-        Rational & operator=(const Numeric_Type &);
+    // Standard (Object & Number)
 
-        template <typename Numeric_Type>
-        Rational & operator=(const Rational<Numeric_Type> &);
+    bool operator<(const Rational &) const;
+    bool operator>(const Rational &) const;
+    bool operator<=(const Rational &) const;
+    bool operator>=(const Rational &) const;
+    bool operator==(const Rational &) const;
+    bool operator!=(const Rational &) const;
 
+    /*********************
+     * --- To String --- *
+     *********************/
 
-        /********************************
-         * --- Arithmetic Operators --- *
-         ********************************/
+    std::string to_string() const;
 
-        // Compound Arithmetic (Number)
+    std::ostream& operator<<(std::ostream& out) const {
+        return out << to_string();
+    }
 
-        template <typename Numeric_Type>
-        Rational & operator+=(const Numeric_Type &);
-
-        template <typename Numeric_Type>
-        Rational & operator-=(const Numeric_Type &);
-
-        template <typename Numeric_Type>
-        Rational & operator*=(const Numeric_Type &);
-
-        template <typename Numeric_Type>
-        Rational & operator/=(const Numeric_Type &);
-
-        // Compound Arithmetic (Object)
-
-        Rational & operator%=(const Rational &);
-
-        // Arithmetic Constant (Unary Opposite)
-
-        const Rational operator-() const;
-
-        // Arithmetic Constant (Number)
-
-        template <typename Numeric_Type>
-        const Rational operator+(const Numeric_Type &) const;
-
-        template <typename Numeric_Type>
-        const Rational operator-(const Numeric_Type &) const;
-
-        template <typename Numeric_Type>
-        const Rational operator*(const Numeric_Type &) const;
-
-        template <typename Numeric_Type>
-        const Rational operator/(const Numeric_Type &) const;
-
-        // Arithmetic Constant (Object)
-
-        const Rational operator%(const Rational &) const;
-
-        // Arithmetic Constant (Number & Object)
-
-        template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator+(
-            int number,
-            const Rational<Numeric_Type> &
-        );
-
-        template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator-(
-            int number,
-            const Rational<Numeric_Type> &
-        );
-
-        template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator*(
-            int number,
-            const Rational<Numeric_Type> &
-        );
-
-        template <typename Numeric_Type>
-        friend const Rational<Numeric_Type> operator/(
-            int number,
-            const Rational<Numeric_Type> &
-        );
-
-
-        /********************************
-         * --- Relational Operators --- *
-         ********************************/
-
-        // Standard (Object & Number)
-
-        bool operator<(const Rational &) const;
-        bool operator>(const Rational &) const;
-        bool operator<=(const Rational &) const;
-        bool operator>=(const Rational &) const;
-        bool operator==(const Rational &) const;
-        bool operator!=(const Rational &) const;
+    template <typename T>
+    friend std::ostream& operator<<(std::ostream&, const Rational<T>&);
 };
+
+template <typename Data>
+std::string Rational<Data>::to_string() const {
+    std::ostringstream oss;
+    oss << numer();
+
+    if (numer())
+        oss << '/' << denom();
+
+    return oss.str();
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const Rational<T>& o) {
+    return out << o.to_string();
+}
+
 
 typedef Rational<int> rational_int;
 typedef Rational<long> rational_long;
@@ -314,13 +314,11 @@ typedef Rational<long long> rational_long_long;
 // Mutators
 
 template<typename Data>
-void Rational<Data>::set_denom(const Data & d)
-{
+void Rational<Data>::set_denom(const Data & d) {
     if (d == 0)
         return;
 
-    if (d > 0)
-    {
+    if (d > 0) {
         _denom = d;
         return;
     }
@@ -336,8 +334,7 @@ const Rational<Data> Rational<Data>::rationalize(const Rational<Numeric_Type> & 
 }
 
 template<typename Data>
-const Rational<Data> Rational<Data>::rationalize(float value)
-{
+const Rational<Data> Rational<Data>::rationalize(float value) {
     int count = 0;
     int denomValue = (int)pow(10, count);
 
@@ -353,10 +350,13 @@ const Rational<Data> Rational<Data>::rationalize(float value)
 }
 
 template<typename Data>
-bool Rational<Data>::commons(const Rational& o, Data& denom, Data& numer1, Data& numer2) const
-{
-    if (common_with(o))
-    {
+bool Rational<Data>::commons(
+    const Rational& o,
+    Data& denom,
+    Data& numer1,
+    Data& numer2
+) const {
+    if (common_with(o)) {
         denom = _denom;
         numer1 = _numer;
         numer2 = o._numer;
@@ -400,8 +400,10 @@ Rational<Data>::Rational(const Data & n, const Data & d):
 }
 
 template<typename Data>
-Rational<Data>::Rational(const Data & n, const Data & d,
-                         const Rational<Data>::RatioForm & f):
+Rational<Data>::Rational(
+    const Data & n, const Data & d,
+    const Rational<Data>::RatioForm & f
+):
     _form(f), _numer(n), _denom(d)
 {
     if (_form == SIMPLIFIED)
@@ -410,8 +412,7 @@ Rational<Data>::Rational(const Data & n, const Data & d,
 
 template<typename Data>
 template <typename Numeric_Type>
-Rational<Data>::Rational(const Numeric_Type & n)
-{
+Rational<Data>::Rational(const Numeric_Type & n) {
     *this = rationalize(n);
 }
 
@@ -429,41 +430,34 @@ Rational<Data>::Rational(const Numeric_Type & n)
 // }
 
 template<typename Data>
-const Data & Rational<Data>::numer() const
-{
+const Data & Rational<Data>::numer() const {
     return _numer;
 }
 
 template<typename Data>
-const Data & Rational<Data>::denom() const
-{
+const Data & Rational<Data>::denom() const {
     return _denom;
 }
-
 
 // Calculations
 
 template<typename Data>
-const float & Rational<Data>::to_float() const
-{
+const float & Rational<Data>::to_float() const {
     return _numer / (float) _denom;
 }
 
 template<typename Data>
-const double & Rational<Data>::to_double() const
-{
+const double & Rational<Data>::to_double() const {
     return _numer / (double) _denom;
 }
 
 template<typename Data>
-const long double & Rational<Data>::to_long_double() const
-{
+const long double & Rational<Data>::to_long_double() const {
     return _numer / (long double) _denom;
 }
 
 template<typename Data>
-const Rational<Data> Rational<Data>::reciprocal() const
-{
+const Rational<Data> Rational<Data>::reciprocal() const {
     int n = _numer;
     int d = _denom;
     Rational temp(1, 1);
@@ -475,28 +469,24 @@ const Rational<Data> Rational<Data>::reciprocal() const
 // Queries
 
 template <typename Data>
-bool Rational<Data>::is_whole() const
-{
+bool Rational<Data>::is_whole() const {
     return _denom == 1;
 }
 
 template <typename Data>
-bool Rational<Data>::is_proper() const
-{
+bool Rational<Data>::is_proper() const {
     return _numer <= _denom;
 }
 
 template <typename Data>
-bool Rational<Data>::common_with(const Rational & o) const
-{
+bool Rational<Data>::common_with(const Rational & o) const {
     return _denom == o._denom;
 }
 
 // Arithmetic
 
 template <typename Data>
-const Rational<Data> Rational<Data>::add(const Rational & a) const
-{
+const Rational<Data> Rational<Data>::add(const Rational & a) const {
     Data n, d;
     n = _numer * a._denom + _denom * a._numer * alg::sign(_numer);
     d = _denom * a._denom;
@@ -504,14 +494,12 @@ const Rational<Data> Rational<Data>::add(const Rational & a) const
 }
 
 template <typename Data>
-const Rational<Data> Rational<Data>::subtract(const Rational & s) const
-{
+const Rational<Data> Rational<Data>::subtract(const Rational & s) const {
     return add(-s);
 }
 
 template <typename Data>
-const Rational<Data> Rational<Data>::multiply(const Rational & m) const
-{
+const Rational<Data> Rational<Data>::multiply(const Rational & m) const {
     Rational temp(*this);
     temp.set_denom(_numer ? _denom * m._denom : 1);
     temp._numer = _numer * m._numer;
@@ -533,27 +521,22 @@ const Rational<Data> Rational<Data>::divide(const Rational & d)
 // Calculations
 
 template <typename Data>
-const Rational<Data> Rational<Data>::simplify() const
-{
+const Rational<Data> Rational<Data>::simplify() const {
     Rational temp(*this);
     Data *least;
     Data *greatest;
 
-    if (abs(_numer) > abs(_denom))
-    {
+    if (abs(_numer) > abs(_denom)) {
         least = &temp._denom;
         greatest = &temp._numer;
     }
-    else
-    {
+    else {
         least = &temp._numer;
         greatest = &temp._denom;
     }
 
-    for (int count = *least; count > 1; count--)
-    {
-        if (*least % count == 0 && *greatest % count == 0)
-        {
+    for (int count = *least; count > 1; count--) {
+        if (*least % count == 0 && *greatest % count == 0) {
             *least /= count;
             *greatest /= count;
         }
@@ -570,15 +553,15 @@ const Rational<Data> Rational<Data>::simplify() const
  ****************************/
 
 template <typename Numeric_Type>
-bool are_common(const Rational<Numeric_Type> & o,
-                const Rational<Numeric_Type> & p)
-{
+bool are_common(
+    const Rational<Numeric_Type> & o,
+    const Rational<Numeric_Type> & p
+) {
     return o.denom() == p.denom();
 }
 
 template <typename Numeric_Type>
-Rational<Numeric_Type> abs(const Rational<Numeric_Type> & o)
-{
+Rational<Numeric_Type> abs(const Rational<Numeric_Type> & o) {
     return Rational(
         abs<Numeric_Type>(o._numer),
         abs<Numeric_Type>(o._denom)
@@ -586,44 +569,37 @@ Rational<Numeric_Type> abs(const Rational<Numeric_Type> & o)
 }
 
 template <typename Numeric_Type>
-float sqrt(const Rational<Numeric_Type> & o)
-{
+float sqrt(const Rational<Numeric_Type> & o) {
     return sqrt(o.to_float());
 }
 
 template <typename Type_1, typename Type_2>
-float pow(const Type_2 & b, const Rational<Type_1> & l)
-{
+float pow(const Type_2 & b, const Rational<Type_1> & l) {
     return pow(b, l.to_float());
 }
 
 template <typename Type_1, typename Type_2>
-float pow(const Rational<Type_1> & b, const Type_2 & l)
-{
+float pow(const Rational<Type_1> & b, const Type_2 & l) {
     return pow(b, l.to_float());
 }
 
 template <typename Type_1, typename Type_2>
-float pow(const Rational<Type_1> & b, const Rational<Type_2> & l)
-{
+float pow(const Rational<Type_1> & b, const Rational<Type_2> & l) {
     return pow(b, l.to_float());
 }
 
 template <typename Numeric_Type>
-float cos(const Rational<Numeric_Type> & o)
-{
+float cos(const Rational<Numeric_Type> & o) {
     return cos(o.to_float());
 }
 
 template <typename Numeric_Type>
-float sin(const Rational<Numeric_Type> & o)
-{
+float sin(const Rational<Numeric_Type> & o) {
     return sin(o.to_float());
 }
 
 template <typename Numeric_Type>
-float exp(const Rational<Numeric_Type> & o)
-{
+float exp(const Rational<Numeric_Type> & o) {
     return exp(o.to_float());
 }
 
@@ -635,44 +611,37 @@ float exp(const Rational<Numeric_Type> & o)
 // Convert Object to Other Type
 
 template <typename Data>
-Rational<Data>::operator int() const
-{
+Rational<Data>::operator int() const {
     return (int)to_float();
 }
 
 template <typename Data>
-Rational<Data>::operator long()
-{
+Rational<Data>::operator long() {
     return (long)to_float();
 }
 
 template <typename Data>
-Rational<Data>::operator long long()
-{
+Rational<Data>::operator long long() {
     return (long long)to_float();
 }
 
 template <typename Data>
-Rational<Data>::operator float()
-{
+Rational<Data>::operator float() {
     return to_float();
 }
 
 template <typename Data>
-Rational<Data>::operator double()
-{
+Rational<Data>::operator double() {
     return to_double();
 }
 
 template <typename Data>
-Rational<Data>::operator long double()
-{
+Rational<Data>::operator long double() {
     return to_long_double();
 }
 
 template <typename Data>
-Rational<Data>::operator Rational<int>() const
-{
+Rational<Data>::operator Rational<int>() const {
     return Rational<int>(
         (int)numer(),
         (int)denom(),
@@ -681,8 +650,7 @@ Rational<Data>::operator Rational<int>() const
 }
 
 template <typename Data>
-Rational<Data>::operator Rational<long int>() const
-{
+Rational<Data>::operator Rational<long int>() const {
     return Rational<long int>(
         (long int)numer(),
         (long int)denom(),
@@ -691,40 +659,12 @@ Rational<Data>::operator Rational<long int>() const
 }
 
 template <typename Data>
-Rational<Data>::operator Rational<long long int>() const
-{
+Rational<Data>::operator Rational<long long int>() const {
     return Rational<long long int>(
         (long long int)numer(),
         (long long int)denom(),
         (Rational<long long int>::RatioForm)form()
     );
-}
-
-
-/***********************************
- * --- Output Stream Operators --- *
- ***********************************/
-
-template <typename Data>
-std::ostream & Rational<Data>::operator<<(std::ostream & out) const
-{
-    out << *this;
-    return out;
-}
-
-template <typename Numeric_Type>
-std::ostream & operator<<(
-        std::ostream & out,
-        const Rational<Numeric_Type> & o
-) {
-    std::ostringstream oss;
-    oss << o.numer();
-
-    if (o.numer())
-        oss << "/" << o.denom();
-
-    out << oss.str();
-    return out;
 }
 
 
@@ -734,8 +674,7 @@ std::ostream & operator<<(
 
 template <typename Data>
 template <typename Numeric_Type>
-Rational<Data> & Rational<Data>::operator=(const Numeric_Type & n)
-{
+Rational<Data> & Rational<Data>::operator=(const Numeric_Type & n) {
     *this = rationalize(n);
 
     if (_form == SIMPLIFIED)
@@ -747,8 +686,7 @@ Rational<Data> & Rational<Data>::operator=(const Numeric_Type & n)
 template <typename Data>
 template <typename Numeric_Type>
 Rational<Data> &
-Rational<Data>::operator=(const Rational<Numeric_Type> & o)
-{
+Rational<Data>::operator=(const Rational<Numeric_Type> & o) {
     _form = (Rational<Data>::RatioForm)o.form();
     _numer = (Data)o.numer();
     _denom = (Data)o.denom();
@@ -764,38 +702,33 @@ Rational<Data>::operator=(const Rational<Numeric_Type> & o)
 
 template <typename Data>
 template <typename Numeric_Type>
-Rational<Data> & Rational<Data>::operator+=(const Numeric_Type & n)
-{
+Rational<Data> & Rational<Data>::operator+=(const Numeric_Type & n) {
     return *this = add(rationalize(n));
 }
 
 template <typename Data>
 template <typename Numeric_Type>
-Rational<Data> & Rational<Data>::operator-=(const Numeric_Type & n)
-{
+Rational<Data> & Rational<Data>::operator-=(const Numeric_Type & n) {
     return *this = subtract(rationalize(n));
 }
 
 template <typename Data>
 template <typename Numeric_Type>
-Rational<Data> & Rational<Data>::operator*=(const Numeric_Type & n)
-{
+Rational<Data> & Rational<Data>::operator*=(const Numeric_Type & n) {
     auto temp = rationalize(n);
     return *this = multiply(rationalize(n));
 }
 
 template <typename Data>
 template <typename Numeric_Type>
-Rational<Data> & Rational<Data>::operator/=(const Numeric_Type & n)
-{
+Rational<Data> & Rational<Data>::operator/=(const Numeric_Type & n) {
     return *this = divide(rationalize(n));
 }
 
 // Compound Arithmetic (Object)
 
 template <typename Data>
-Rational<Data> & Rational<Data>::operator%=(const Rational & o)
-{
+Rational<Data> & Rational<Data>::operator%=(const Rational & o) {
     Data d, n1, n2;
     commons(o, d, n1, n2);
     *this = Rational(n1 % n2, d);
@@ -806,8 +739,7 @@ Rational<Data> & Rational<Data>::operator%=(const Rational & o)
 
 template <typename Data>
 const Rational<Data>
-Rational<Data>::operator-() const
-{
+Rational<Data>::operator-() const {
     Rational temp(*this);
     temp._numer *= -1;
     return temp;
@@ -818,8 +750,7 @@ Rational<Data>::operator-() const
 template <typename Data>
 template <typename Numeric_Type>
 const Rational<Data>
-Rational<Data>::operator+(const Numeric_Type & n) const
-{
+Rational<Data>::operator+(const Numeric_Type & n) const {
     Rational temp(*this);
     temp += n;
     return temp;
@@ -828,8 +759,7 @@ Rational<Data>::operator+(const Numeric_Type & n) const
 template <typename Data>
 template <typename Numeric_Type>
 const Rational<Data>
-Rational<Data>::operator-(const Numeric_Type & n) const
-{
+Rational<Data>::operator-(const Numeric_Type & n) const {
     Rational temp(*this);
     temp -= n;
     return temp;
@@ -838,8 +768,7 @@ Rational<Data>::operator-(const Numeric_Type & n) const
 template <typename Data>
 template <typename Numeric_Type>
 const Rational<Data>
-Rational<Data>::operator*(const Numeric_Type & n) const
-{
+Rational<Data>::operator*(const Numeric_Type & n) const {
     Rational temp(*this);
     temp *= n;
     return temp;
@@ -848,8 +777,7 @@ Rational<Data>::operator*(const Numeric_Type & n) const
 template <typename Data>
 template <typename Numeric_Type>
 const Rational<Data>
-Rational<Data>::operator/(const Numeric_Type & n) const
-{
+Rational<Data>::operator/(const Numeric_Type & n) const {
     Rational temp(*this);
     temp /= n;
     return temp;
@@ -857,8 +785,7 @@ Rational<Data>::operator/(const Numeric_Type & n) const
 
 template <typename Data>
 const Rational<Data>
-Rational<Data>::operator%(const Rational & o) const
-{
+Rational<Data>::operator%(const Rational & o) const {
     Rational temp(*this);
     temp %= o;
     return temp;
@@ -868,8 +795,7 @@ Rational<Data>::operator%(const Rational & o) const
 
 template <typename Numeric_Type>
 const Rational<Numeric_Type>
-operator+(int n, const Rational<Numeric_Type> & o)
-{
+operator+(int n, const Rational<Numeric_Type> & o) {
     Rational<Numeric_Type> numberRatio;
     numberRatio = Rational<Numeric_Type>::rationalize(n);
     numberRatio += o;
@@ -878,8 +804,7 @@ operator+(int n, const Rational<Numeric_Type> & o)
 
 template <typename Numeric_Type>
 const Rational<Numeric_Type>
-operator-(int n, const Rational<Numeric_Type> & o)
-{
+operator-(int n, const Rational<Numeric_Type> & o) {
     Rational<Numeric_Type> numberRatio;
     numberRatio = Rational<Numeric_Type>::rationalize(n);
     numberRatio -= o;
@@ -888,8 +813,7 @@ operator-(int n, const Rational<Numeric_Type> & o)
 
 template <typename Numeric_Type>
 const Rational<Numeric_Type>
-operator*(int n, const Rational<Numeric_Type> & o)
-{
+operator*(int n, const Rational<Numeric_Type> & o) {
     Rational<Numeric_Type> numberRatio;
     numberRatio = Rational<Numeric_Type>::rationalize(n);
     numberRatio *= o;
@@ -898,8 +822,7 @@ operator*(int n, const Rational<Numeric_Type> & o)
 
 template <typename Numeric_Type>
 const Rational<Numeric_Type>
-operator/(int n, const Rational<Numeric_Type> & o)
-{
+operator/(int n, const Rational<Numeric_Type> & o) {
     Rational<Numeric_Type> numberRatio;
     numberRatio = Rational<Numeric_Type>::rationalize(n);
     numberRatio /= o;
@@ -928,44 +851,38 @@ void Rational<Data>::numericOperation(
 }
 
 template <typename Data>
-bool Rational<Data>::operator<(const Rational & n) const
-{
+bool Rational<Data>::operator<(const Rational & n) const {
     Rational<long> a, b;
     numericOperation(n, a, b);
     return a.numer() < b.numer();
 }
 
 template <typename Data>
-bool Rational<Data>::operator>(const Rational & n) const
-{
+bool Rational<Data>::operator>(const Rational & n) const {
     Rational<long> a, b;
     numericOperation(n, a, b);
     return a.numer() > b.numer();
 }
 
 template <typename Data>
-bool Rational<Data>::operator<=(const Rational & n) const
-{
+bool Rational<Data>::operator<=(const Rational & n) const {
     return !(*this > n);
 }
 
 template <typename Data>
-bool Rational<Data>::operator>=(const Rational & n) const
-{
+bool Rational<Data>::operator>=(const Rational & n) const {
     return !(*this < n);
 }
 
 template <typename Data>
-bool Rational<Data>::operator==(const Rational & n) const
-{
-	Rational<long> a, b;
-	numericOperation(n, a, b);
-	return a.numer() == b.numer();
+bool Rational<Data>::operator==(const Rational & n) const {
+    Rational<long> a, b;
+    numericOperation(n, a, b);
+    return a.numer() == b.numer();
 }
 
 template <typename Data>
-bool Rational<Data>::operator!=(const Rational & n) const
-{
+bool Rational<Data>::operator!=(const Rational & n) const {
     return !(*this == n);
 }
 

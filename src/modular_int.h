@@ -25,8 +25,18 @@ public:
 
     modular_int& operator++() { add(1); return *this; }
     modular_int& operator--() { add(-1); return *this; }
-    modular_int operator++(int);
-    modular_int operator--(int);
+
+    modular_int operator++(int) {
+		modular_int temp(*this);
+		++*this;
+		return temp;
+	}
+
+    modular_int operator--(int) {
+		modular_int temp = *this;
+		--*this;
+		return temp;
+	}
 };
 
 template <int T, int M>
@@ -37,17 +47,5 @@ public:
 	mod(): modular_int(T, M) {}
 	mod(const mod&) = default;
 };
-
-modular_int modular_int::operator++(int) {
-    modular_int temp(*this);
-    ++*this;
-    return temp;
-}
-
-modular_int modular_int::operator--(int) {
-    modular_int temp = *this;
-    --*this;
-    return temp;
-}
 
 #endif /* MODULAR_INT_H_ */

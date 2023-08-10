@@ -44,12 +44,14 @@ public:
     Matrix(
         size_t rows,
         size_t cols,
-        std::initializer_list<std::initializer_list<Content_Type>>
+        std::initializer_list
+            <std::initializer_list<Content_Type>>&
         components
     ): Table_Class<Content_Type>(rows, cols, components) {}
 
     Matrix(
-        std::initializer_list<std::initializer_list<Content_Type>>
+        const std::initializer_list
+			<std::initializer_list<Content_Type>>&
         components
     ): Table_Class<Content_Type>(components) {}
 
@@ -66,7 +68,6 @@ public:
     Rational<long> determinant         () const;
     Matrix         cofactor            () const;
     Matrix         adjoint             () const;
-    std::string    to_string           () const;
 
     Matrix <float,       Table_Class>  inverse              () const;
     Matrix <double,      Table_Class>  precise_inverse      () const;
@@ -86,7 +87,8 @@ public:
 
     template <typename Second_Type>
     Matrix & operator=(
-        const std::initializer_list<std::initializer_list<Second_Type>>&
+        const std::initializer_list
+            <std::initializer_list<Second_Type>>&
     );
 
     bool operator==(const Matrix &) const;
@@ -137,7 +139,40 @@ public:
     static const Matrix  single_col (size_t);
     static const Matrix  single_col (size_t, const Content_Type &);
     static const Matrix  identity   (size_t);
+
+    /*********************
+     * --- To String --- *
+     *********************/
+
+    std::string to_string() const;
+
+    std::ostream& operator<<(std::ostream& out) const {
+        return out << to_string();
+    }
+
+    template <typename C, template<typename> class T>
+    friend std::ostream& operator<<(std::ostream&, const Matrix<C, T>&);
 };
+
+template <typename C, template<typename> class T>
+std::string Matrix<C, T>::to_string() const {
+    std::ostringstream oss;
+
+    for (auto& row : *this) {
+        for (auto& col : row)
+            oss << ' ' << col;
+
+        oss << '\n';
+    }
+
+    return oss.str();
+}
+
+template <typename C, template<typename> class T>
+std::ostream& operator<<(std::ostream& out, const Matrix<C, T>& o) {
+    return out << o.to_string();
+}
+
 
 /*********************
  * --- Functions --- *
@@ -387,20 +422,6 @@ Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const {
 	);
 }
 
-template <typename C, template<typename> class T>
-std::string Matrix<C, T>::to_string() const {
-    std::ostringstream oss;
-
-    for (auto& row : *this) {
-        for (auto& col : row)
-            oss << ' ' << col;
-
-        oss << '\n';
-    }
-
-    return oss.str();
-}
-
 
 /******************************
  * --- Operator Overloads --- *
@@ -416,7 +437,8 @@ Matrix<C, T> & Matrix<C, T>::operator=(const Matrix<D, T> & object) {
 template <typename C, template<typename> class T>
 template <typename D>
 Matrix<C, T> & Matrix<C, T>::operator=(
-    const std::initializer_list<std::initializer_list<D>>& list
+    const std::initializer_list
+        <std::initializer_list<D>>& list
 ) {
     size_t rows = list.size();
     auto it = list.begin();
