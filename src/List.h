@@ -25,6 +25,10 @@ private:
 
     scoped_ptr<Deque> _list;
 
+    static size_t to_index(size_t size, int pos) {
+        return pos >= 0 ? (size_t)pos : size + (size_t)pos;
+    }
+
     static Node* at(const Deque& list, int pos) {
         Node* n = nullptr;
         int i = 0;
@@ -245,37 +249,39 @@ public:
         return pop_front(*_list);
     }
 
-    List& insert(const T& t, size_t pos) {
-        if (!any() || pos == size()) {
+    List& insert(const T& t, int pos) {
+        size_t p = to_index(size(), pos);
+
+        if (!any() || p == size()) {
             push_back(t);
             return *this;
         }
 
-        if (!pos) {
+        if (!p) {
             push_front(t);
             return *this;
         }
 
-        if (pos > size())
+        if (p > size())
             return *this;
 
-        insert(*_list, t, pos);
+        insert(*_list, t, p);
         return *this;
     }
 
-    bool remove(size_t pos) {
-        if (pos >= size())
+    bool remove(int pos) {
+        size_t p = to_index(size(), pos);
+
+        if (p >= size())
             return false;
 
-        if (!pos) {
+        if (!p)
             return pop_front();
-        }
 
-        if (pos == size() - 1) {
+        if (p == size() - 1)
             return pop_back();
-        }
 
-        remove(*_list, pos);
+        remove(*_list, p);
         return true;
     }
 
@@ -294,11 +300,11 @@ public:
         return at(*_list, pos)->payload;
     }
 
-    List& resize(size_t pos) {
-        while (size() < pos)
+    List& resize(size_t len) {
+        while (size() < len)
             push_back();
 
-        while (size() > pos)
+        while (size() > len)
             pop_back();
 
         return *this;

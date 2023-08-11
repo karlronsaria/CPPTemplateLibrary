@@ -1,409 +1,455 @@
-/*
- * ForwardList.h
- *
- *  Created on: Apr 9, 2015
- *      Author: adaniels4
- */
-
 #ifndef FORWARDLIST_H_
 #define FORWARDLIST_H_
 
+#include "arithmetic.h"
+#include "enumerable.h"
+#include "scoped_ptr.h"
+#include "Aggregate.h"
 #include "Collection.h"
-#include "Unidirectional\Connect.h"
-#include "Unidirectional\End.h"
-#include "Unidirectional\Pop.h"
-#include "Unidirectional\Position.h"
-#include "Unidirectional\Push.h"
+#include <initializer_list>
 
-// Test
-#include "Unidirectional\Print.h"
-#include <iostream>
+template <typename T>
+class ForwardList: public Collection, Aggregate<T> {
+private:
+    struct Node {
+        T payload = T();
+        Node* next = nullptr;
+    };
 
-/*************************************************************************
- * ForwardList                                                           *
- * _____________________________________________________________________ *
- *                                                                       *
- * A singly-linked list that can be traversed in one direction.          *
- * Parameterizes node container content.                                 *
- *                                                                       *
- *************************************************************************/
+    struct Queue {
+        Node* _head = nullptr;
+        Node* _tail = nullptr;
+        size_t _size = 0L;
+    };
 
-template <typename Content_Type/*, template <typename> class Node_Type*/>
-class ForwardList: public Collection
-{
-	public:
+    scoped_ptr<Queue> _list;
 
-		typedef scoped_ptr< UnaryNode<Content_Type> > node_ptr;
-		typedef typename node_ptr::locator            node_loc;
+    static size_t to_index(size_t size, int pos) {
+        return pos >= 0 ? (size_t)pos : size + (size_t)pos;
+    }
 
-		typedef scoped_ptr< size_t > size_ptr;
-		typedef size_ptr::locator    size_loc;
+    static Node* at(const Queue& list, int pos) {
+        Node* n = list._head;
+        size_t i = 0;
 
-	private:
+        while (i++ < to_index(list._size, pos))
+            n = n->next;
 
-		node_ptr   _head;
-		size_ptr   _size;
+        return n;
+    }
 
-	protected:
+    static void clear(Node* n) {
+        if (!n)
+            return;
 
-		void push_front (node_ptr &);
-		void push_back  (node_ptr &);
+        clear(n->next);
+        delete n;
+    }
 
-	public:
+    static void clear(Queue& list) {
+        clear(list._head);
+        list._head = list._tail = nullptr;
+    }
 
-		ForwardList(): _size(new size_t(0)) {}
-	   ~ForwardList()                       {}
+    static void push_back(Queue& list, const T& t) {
+        bool hasAny = list._size;
+        ++list._size;
 
-	          Content_Type & front ()
+        if (!hasAny) {
+            list._head = new Node{ t, nullptr };
+            list._tail = list._head;
+            return;
+        }
 
-	          	  { return _head->content(); }
+        auto n = new Node{ t, nullptr };
+        list._tail->next = n;
+        list._tail = n;
+    }
 
-	    const Content_Type & front () const
+    static void push_front(Queue& list, const T& t) {
+        bool hasAny = list._size;
+        ++list._size;
 
-	    		  { return _head->content(); }
+        if (!hasAny) {
+            list._head = new Node{ t, nullptr };
+            list._tail = list._head;
+            return;
+        }
 
-	          Content_Type & back  ()
+        auto n = new Node{ t, list._head };
+        list._tail = n;
+    }
 
-	          	  { return unarynode::End(_head)->content(); }
+    static bool pop_back(Queue& list) {
+        if (!list._size)
+            return false;
 
-	    const Content_Type & back  () const
+        auto n = list._head;
+        list._head = n->next;
+        delete n;
+        --list._size;
+        return true;
+    }
 
-	    		  { return unarynode::End(_head)->content(); }
+    static bool pop_front(Queue& list) {
+        if (!list._size)
+            return false;
 
-		bool   any   () const { return *_size; }
-		size_t size  () const { return *_size; }
+        auto n = list._tail;
+        list._tail->next = nullptr;
+        delete n;
+        --list._size;
+        return false;
+    }
 
-		void   clear ()       { _head.deallocate(); *_size = 0; }
+    static void copy(Queue& list, Queue& o) {
+        clear(list);
+        auto n = o._head;
 
-		void push_front ();
-		void push_front (const Content_Type &);
-		void push_back  ();
-		void push_back  (const Content_Type &);
+        while (n) {
+            push_back(list, n->payload);
+            n = n->next;
+        }
+    }
 
-		Content_Type pop_front ();
-		Content_Type pop_back  ();
+    // require: head != null, pos in range(0, size - 1)
+    static void insert_after(Queue& list, const T& t, size_t pos) {
+        auto n = list._head;
+        size_t i = 0;
 
-		// Test
-		void print()
-		{
-			listnode::Print(_head);
-		}
+        while (i++ < pos)
+            n = n->next;
 
-		class Enumerator
-		{
-			private:
+        n->next = new Node{ t, n->next };
+        ++list._size;
+    }
 
-				node_loc _pointer;
-				size_loc _list_size;
+    // require: head != null, pos in range(1, size - 2)
+    static void remove(Queue& list, size_t pos) {
+        auto n = list._head;
+        size_t i = 0;
 
-			protected:
+        while (i++ < pos - 1)
+            n = n->next;
 
-				void insert_after(node_ptr &);
+        auto temp = n->next;
+        n->next = n->next->next;
+        delete temp;
+        --list._size;
+    }
+public:
+    ForwardList():
+        _list(new Queue()) {}
 
-			public:
+    virtual ~ForwardList() {
+        clear();
+    }
 
-				      Enumerator();
-			         ~Enumerator();
+    ForwardList(const ForwardList& other):
+        _list(new Queue())
+    {
+        *this = other;
+    }
 
-				      Enumerator     & operator=  (const Enumerator &);
-				      Content_Type & operator*  ();
-				const Content_Type & operator*  ()       const;
-				      Content_Type * operator-> ();
-				const Content_Type * operator-> ()       const;
-				      Enumerator       operator++ ();
-				      Enumerator       operator++ (int);
-				      Enumerator     & operator+= (size_t);
-				const Enumerator       operator+  (size_t) const;
+    ForwardList& operator=(const ForwardList& other) {
+        copy(*_list, *(Queue*)other._list);
+        return *this;
+    }
 
-				void         insert_after ();
-				void         insert_after (const Content_Type &);
-				Content_Type remove_after ();
+    ForwardList(const std::initializer_list<T>& list):
+        _list(new Queue())
+    {
+        *this = list;
+    }
 
-				friend class ForwardList;
-		};
+    ForwardList& operator=(const std::initializer_list<T>& list) {
+        clear();
 
-		Enumerator begin () const;
-		Enumerator end   () const;
+        for (auto& item : list)
+            push_back(item);
+
+        return *this;
+    }
+
+    size_t size() const {
+        return _list->_size;
+    }
+
+    bool any() const {
+        return size();
+    }
+
+    const T& front() const {
+        // fails fast
+        return _list->_head->payload;
+    }
+
+    T& front() {
+        // fails fast
+        return _list->_head->payload;
+    }
+
+    const T& back() const {
+        // fails fast
+        return _list->_tail->payload;
+    }
+
+    T& back() {
+        // fails fast
+        return _list->_tail->payload;
+    }
+
+    ForwardList& push_back(const T& t) {
+        push_back(*_list, t);
+        return *this;
+    }
+
+    ForwardList& push_back() {
+        return push_back(T());
+    }
+
+    ForwardList& push_front(const T& t) {
+        push_front(*_list, t);
+        return *this;
+    }
+
+    ForwardList& push_front() {
+        return push_front(T());
+    }
+
+    bool pop_back() {
+        return pop_back(*_list);
+    }
+
+    bool pop_front() {
+        return pop_front(*_list);
+    }
+
+    ForwardList& insert(const T& t, int pos) {
+        size_t p = to_index(size(), pos);
+
+        if (!any() || p == size()) {
+            push_back(t);
+            return *this;
+        }
+
+        if (!p) {
+            push_front(t);
+            return *this;
+        }
+
+        if (p > size())
+            return *this;
+
+        insert_after(*_list, t, p - 1);
+        return *this;
+    }
+
+    bool remove(size_t pos) {
+        size_t p = to_index(size(), pos);
+
+        if (p >= size())
+            return false;
+
+        if (!p)
+            return pop_front();
+
+        if (p == size() - 1)
+            return pop_back();
+
+        remove(*_list, p);
+        return true;
+    }
+
+    ForwardList& clear() {
+        clear(*_list);
+        return *this;
+    }
+
+    const T& operator[](int pos) const {
+        // fails fast
+        return at(*_list, pos)->payload;
+    }
+
+    T& operator[](int pos) {
+        // fails fast
+        return at(*_list, pos)->payload;
+    }
+
+    ForwardList& resize(size_t len) {
+        while (size() < len)
+            push_back();
+
+        while (size() > len)
+            pop_back();
+
+        return *this;
+    }
+
+    class Enumerator {
+    private:
+        typedef typename scoped_ptr<Queue>::locator list_ptr;
+
+        list_ptr _list;
+        Node* _node;
+        Node* (*_next)(Node*);
+
+        static Node* default_next(Node* n) {
+            return n->next;
+        }
+
+        static Node* ret(Node* n) {
+            return n;
+        }
+
+        Enumerator(list_ptr l, Node* n):
+            _list(l),
+            _node(n),
+            _next(&default_next) {}
+
+        Enumerator(list_ptr l, Node* n, Node* (*next)(Node*)):
+            _list(l),
+            _node(n),
+            _next(next) {}
+
+        static Enumerator forward(list_ptr l, Node* n) {
+            return Enumerator(l, n);
+        }
+    public:
+        friend class ForwardList;
+
+        Enumerator():
+            _list(nullptr),
+            _node(nullptr),
+            _next(&ret) {}
+
+        virtual ~Enumerator() = default;
+        Enumerator(const Enumerator&) = default;
+        Enumerator& operator=(const Enumerator&) = default;
+
+        const T& operator*() const {
+            // fails fast
+            return _node->payload;
+        }
+
+        T& operator*() {
+            // fails fast
+            return _node->payload;
+        }
+
+        const T* operator->() const {
+            // fails fast
+            return &_node->payload;
+        }
+
+        T* operator->() {
+            // fails fast
+            return &_node->payload;
+        }
+
+        Enumerator& operator++() {
+            // fails fast
+            _node = _next(_node);
+            return *this;
+        }
+
+        Enumerator operator++(int) {
+            // fails fast
+            return arithmetic::PostIncr(*this);
+        }
+
+        Enumerator& operator+=(size_t pos) {
+            size_t i = 0;
+
+            while (i++ < pos)
+                ++(*this);
+        }
+
+        const Enumerator operator+(size_t pos) const {
+            return arithmetic::Plus(*this, pos);
+        }
+
+        Enumerator operator+(size_t pos) {
+            return arithmetic::Plus(*this, pos);
+        }
+
+        bool operator==(const Enumerator& other) const {
+            return _node == other._node;
+        }
+
+        bool operator!=(const Enumerator& other) const {
+            return !(*this == other);
+        }
+    };
+
+    const Enumerator begin() const {
+        return Enumerator::forward(_list.pointer(), _list->_head);
+    }
+
+    Enumerator begin() {
+        return Enumerator::forward(_list.pointer(), _list->_head);
+    }
+
+    const Enumerator end() const {
+        return Enumerator();
+    }
+
+    bool insert_after(Enumerator& it, const T& t) {
+        if (_list != it._list)
+            return false;
+
+        if (!any()) {
+            push_back(t);
+            it._node = _list->_tail;
+            return true;
+        }
+
+        Node* n = it._node;
+
+        if (!n)
+            return false;
+
+        Node* m = new Node{ t, n->next };
+
+        if (!n->next)
+            _list->_tail = m;
+
+        n->next = m;
+        ++_list->_size;
+        return true;
+    }
+
+    bool remove_after(Enumerator& it) {
+        if (_list != it._list || !any() || !it._node || !it._node->next)
+            return false;
+
+        Node* n = it._node->next;
+        it._node->next = n->next;
+
+        if (!it._node->next)
+            _list->_tail = it._node;
+
+        delete n;
+        --_list->_size;
+        return true;
+    }
+
+    std::string to_string(const std::string& delim = " ") const {
+        return enumerable::ToString(*this, delim);
+    }
+
+    std::ostream& operator<<(std::ostream& out) const {
+        return out << to_string();
+    }
+
+    template <typename S>
+    friend std::ostream& operator<<(std::ostream&, const ForwardList<S>&);
 };
 
-
-// --
-
-
-/*****************************
- * --- Protected Methods --- *
- *****************************/
-
-template <typename C>
-void ForwardList<C>::Enumerator::insert_after(node_ptr & node)
-{
-	if(!_pointer.is_null())
-	{
-		if(unarynode::Connect(node, _pointer->next()) &&
-		   unarynode::Connect(_pointer, node))
-		{
-			node.avert();
-			++(*_list_size);
-		}
-	}
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const ForwardList<T>& o) {
+    return out << o.to_string();
 }
-
-
-/**************************
- * --- Public Methods --- *
- **************************/
-
-// Constructor & Destructor
-
-template <typename C>
-ForwardList<C>::Enumerator::Enumerator() {}
-
-template <typename C>
-ForwardList<C>::Enumerator::~Enumerator() {}
-
-// Operators
-
-template <typename C>
-typename ForwardList<C>::Enumerator &
-ForwardList<C>::Enumerator::operator=(const Enumerator & other)
-{
-	_pointer   = other._pointer;
-	_list_size = other._list_size;
-
-	return *this;
-}
-
-template <typename C>
-C & ForwardList<C>::Enumerator::operator*()
-{
-	assert(_pointer);
-	return _pointer->content();
-}
-
-template <typename C>
-const C & ForwardList<C>::Enumerator::operator*() const
-{
-	assert(_pointer);
-	return _pointer->content();
-}
-
-template <typename C>
-C * ForwardList<C>::Enumerator::operator->()
-{
-	assert(_pointer);
-	return &_pointer->content();
-}
-
-template <typename C>
-const C * ForwardList<C>::Enumerator::operator->() const
-{
-	assert(_pointer);
-	return &_pointer->content();
-}
-
-template <typename C>
-typename ForwardList<C>::Enumerator
-ForwardList<C>::Enumerator::operator++()
-{
-	_pointer = _pointer->next();
-
-	return *this;
-}
-
-template <typename C>
-typename ForwardList<C>::Enumerator
-ForwardList<C>::Enumerator::operator++(int)
-{
-	Enumerator temp;
-
-	temp._pointer = _pointer;
-
-	++(*this);
-
-	return temp;
-}
-
-template <typename C>
-typename ForwardList<C>::Enumerator &
-ForwardList<C>::Enumerator::operator+=(size_t distance)
-{
-	unarynode::GetPosition(_pointer, distance, _pointer);
-
-	return *this;
-}
-
-template <typename C>
-const typename ForwardList<C>::Enumerator
-ForwardList<C>::Enumerator::operator+(size_t distance) const
-{
-	node_loc temp;
-
-	return temp += distance;
-}
-
-// List-changing Methods
-
-template <typename C>
-void ForwardList<C>::Enumerator::insert_after()
-{
-	node_ptr node;
-
-	node.reallocate();
-
-	insert_after(node);
-}
-
-template <typename C>
-void ForwardList<C>::Enumerator::insert_after(const C & content)
-{
-	node_ptr node;
-
-	node.reallocate();
-
-	node->content(content);
-
-	insert_after(node);
-}
-
-template <typename C>
-C ForwardList<C>::Enumerator::remove_after()
-{
-	if(!_pointer.is_null() && !_pointer->next().is_null())
-	{
-		node_ptr temp;
-
-		temp.assign(_pointer->next());
-
-		unarynode::Connect(_pointer, _pointer->next()->next());
-
-		temp->next().avert();
-
-		--(*_list_size);
-
-		return temp->content();
-	}
-
-	return C();
-}
-
-
-// --
-
-
-/*****************************
- * --- Protected Methods --- *
- *****************************/
-
-template <typename C/*, template <typename> class N*/>
-void ForwardList<C>::push_front(typename ForwardList<C>::node_ptr & node)
-{
-	unarynode::PushFront(_head, node);
-
-    ++(*_size);
-}
-
-template <typename C/*, template <typename> class N*/>
-void ForwardList<C>::push_back(typename ForwardList<C>::node_ptr & node)
-{
-	unarynode::PushBack(_head, node);
-
-    ++(*_size);
-}
-
-
-/**************************
- * --- Public Methods --- *
- **************************/
-
-// - Mutators
-
-// - - Push
-
-template <typename C/*, template <typename> class N*/>
-void ForwardList<C>::push_front()
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	push_front(temp);
-}
-
-template <typename C/*, template <typename> class N*/>
-void ForwardList<C>::push_front(const C & content)
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	temp->content(content);
-
-	push_front(temp);
-}
-
-template <typename C/*, template <typename> class N*/>
-void ForwardList<C>::push_back()
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	push_back(temp);
-}
-
-template <typename C/*, template <typename> class N*/>
-void ForwardList<C>::push_back(const C & content)
-{
-	node_ptr temp;
-
-	temp.reallocate();
-
-	temp->content(content);
-
-	push_back(temp);
-}
-
-// - - Pop
-
-template <typename C/*, template <typename> class N*/>
-C ForwardList<C>::pop_front()
-{
-    --(*_size);
-
-	return unarynode::PopFront(_head);
-}
-
-template <typename C/*, template <typename> class N*/>
-C ForwardList<C>::pop_back()
-{
-    --(*_size);
-
-	return unarynode::PopBack(_head);
-}
-
-// - - Returning Enumerators
-
-template <typename C>
-typename ForwardList<C>::Enumerator ForwardList<C>::begin() const
-{
-	Enumerator temp;
-
-	temp._pointer   = _head;
-	temp._list_size = _size;
-
-	return temp;
-}
-
-template <typename C>
-typename ForwardList<C>::Enumerator ForwardList<C>::end() const
-{
-	Enumerator temp;
-
-	temp._pointer   = End(_head);
-	temp._list_size = _size;
-
-	return temp;
-}
-
 
 #endif /* FORWARDLIST_H_ */
+
