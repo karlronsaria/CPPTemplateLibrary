@@ -29,7 +29,6 @@ class Table: public Array<Array<Content_Type>>
 			_cols(cols)
 		{
 			Array<Content_Type> temp(cols);
-			size_t index;
 
             for (auto& item : *this)
                 item = temp;
@@ -45,11 +44,11 @@ class Table: public Array<Array<Content_Type>>
 		{
 			auto rowIt = list.begin();
 
-			for (size_t row = 0; row < this->rows(); ++row)
+			for (int row = 0; row < (int)this->rows(); ++row)
 			{
 				auto colIt = rowIt->begin();
 
-				for (size_t col = 0; col < this->cols(); ++col)
+				for (int col = 0; col < (int)this->cols(); ++col)
 				{
 					(*this)[row][col] = *colIt;
 					++colIt;
@@ -84,7 +83,6 @@ class Table: public Array<Array<Content_Type>>
 			_cols(cols)
 		{
 			Array<Content_Type> temp(cols, content);
-			size_t index;
 
             for (auto& item : *this)
                 item = temp;

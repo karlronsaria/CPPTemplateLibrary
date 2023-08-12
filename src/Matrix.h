@@ -248,14 +248,14 @@ Matrix<C, T> Matrix<C, T>::partial(size_t ROW, size_t COL) const {
     Matrix partialMatrix(rows() - 1, cols() - 1);
 
     if (partialMatrix.rows() > 0 && partialMatrix.cols() > 0) {
-        modular_int rowCount(0, partialMatrix.rows() + 1);
-        modular_int colCount(0, partialMatrix.cols() + 1);
+        modular_int rowCount(0, (int)partialMatrix.rows() + 1);
+        modular_int colCount(0, (int)partialMatrix.cols() + 1);
         int partialRowIndex = 0;
 
-        for (rowCount = ROW + 1; rowCount != ROW; rowCount++) {
+        for (rowCount = (int)ROW + 1; rowCount != (int)ROW; rowCount++) {
             int partialColIndex = 0;
 
-            for (colCount = COL + 1; colCount != COL; colCount++) {
+            for (colCount = (int)COL + 1; colCount != (int)COL; colCount++) {
                 partialMatrix[partialRowIndex][partialColIndex]
                     = (*this)[rowCount.value()][colCount.value()];
 
@@ -610,7 +610,7 @@ template <typename C, template<typename> class T>
 const Matrix<C, T> Matrix<C, T>::identity(size_t size) {
     Matrix id = square(size, 0);
 
-    for (size_t count = 0; count < size; count++)
+    for (int count = 0; count < (int)size; count++)
         id[count][count] = (C)1;
 
     return id;
