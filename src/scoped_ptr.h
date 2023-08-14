@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-template<typename Data>
+template <typename Data>
 class scoped_ptr/*: public safe_bool<>*/
 {
     private:
@@ -34,11 +34,11 @@ class scoped_ptr/*: public safe_bool<>*/
          * --- Constructors & Destructor --- *
          *************************************/
 
+        virtual ~scoped_ptr();
         scoped_ptr ();
-        scoped_ptr (Data* pointer, bool isAggregate = false);
-        scoped_ptr (const scoped_ptr & object);
-        scoped_ptr (std::initializer_list<Data> list);
-        virtual ~scoped_ptr ();
+        scoped_ptr (Data *, bool isAggregate = false);
+        scoped_ptr (const scoped_ptr &);
+        scoped_ptr (const std::initializer_list<Data> &);
 
         /**************************
          * --- Public Methods --- *
@@ -46,19 +46,20 @@ class scoped_ptr/*: public safe_bool<>*/
 
         // Accessors
 
-        bool       any  () const;
-        scoped_ptr copy () const;
-        Data     * ref  () const;
+        bool       any       () const;
+        bool       aggregate () const;
+        scoped_ptr copy      () const;
+        Data     * ref       () const;
 
         // Mutators
 
-        void       copy       (const scoped_ptr & object);
+        void       copy       (const scoped_ptr &);
         void       release    ();
         void       reallocate ();
-        void       reallocate (const Data & input);
+        void       reallocate (const Data &);
         void       avert      ();
-        void       assign     (const scoped_ptr & object);
-        void       swap       (scoped_ptr & object);
+        void       assign     (const scoped_ptr &);
+        void       swap       (scoped_ptr &);
 
         /********************************
          * --- Overloaded Operators --- *
@@ -66,8 +67,8 @@ class scoped_ptr/*: public safe_bool<>*/
 
         // Assignment
 
-        scoped_ptr & operator=  (Data             * pointer);
-        scoped_ptr & operator=  (const scoped_ptr & object);
+        scoped_ptr & operator=  (Data *);
+        scoped_ptr & operator=  (const scoped_ptr &);
 
         // Dereference
 
@@ -78,18 +79,18 @@ class scoped_ptr/*: public safe_bool<>*/
 
         // Comparator
 
-        bool         operator== (const Data       * pointer) const;
-        bool         operator!= (const Data       * pointer) const;
-        bool         operator== (const scoped_ptr & object)  const;
-        bool         operator!= (const scoped_ptr & object)  const;
+        bool         operator== (const Data *) const;
+        bool         operator!= (const Data *) const;
+        bool         operator== (const scoped_ptr &)  const;
+        bool         operator!= (const scoped_ptr &)  const;
 
-        template<typename Type>
-        friend bool  operator== (const Type           * & pointer,
-                                 const scoped_ptr<Type> & object);
+        template <typename Type>
+        friend bool  operator== (const Type *,
+                                 const scoped_ptr<Type> &);
 
-        template<typename Type>
-        friend bool  operator!= (const Type           * & pointer,
-                                 const scoped_ptr<Type> & object);
+        template <typename Type>
+        friend bool  operator!= (const Type * pointer,
+                                 const scoped_ptr<Type> &);
 
         // Typecast Conversion
 
@@ -98,8 +99,8 @@ class scoped_ptr/*: public safe_bool<>*/
 
         // Subscript
 
-        const Data & operator[] (size_t pos) const;
-              Data & operator[] (size_t pos);
+        const Data & operator[] (size_t) const;
+              Data & operator[] (size_t);
 
 
         class locator
@@ -112,10 +113,10 @@ class scoped_ptr/*: public safe_bool<>*/
 
                 friend class scoped_ptr;
 
-                locator ();
-                locator (const locator    & object);
-                locator (const scoped_ptr & object);
                 virtual ~locator ();
+                locator ();
+                locator (const locator &);
+                locator (const scoped_ptr &);
 
                /**************************
                 * --- Public Methods --- *
@@ -128,8 +129,8 @@ class scoped_ptr/*: public safe_bool<>*/
                 // Mutators
 
                 void avert   ();
-                void assign  (const locator & object);
-                void swap    (locator       & object);
+                void assign  (const locator &);
+                void swap    (locator &);
 
                 /********************************
                 * --- Overloaded Operators --- *
@@ -137,8 +138,8 @@ class scoped_ptr/*: public safe_bool<>*/
 
                 // Assignment
 
-                locator    & operator=  (const locator    & object);
-                locator    & operator=  (const scoped_ptr & object);
+                locator    & operator=  (const locator &);
+                locator    & operator=  (const scoped_ptr &);
 
                 // Dereference
 
@@ -149,46 +150,46 @@ class scoped_ptr/*: public safe_bool<>*/
 
                 // Comparator
 
-                bool         operator== (const Data       * pointer) const;
-                bool         operator!= (const Data       * pointer) const;
-                bool         operator== (const locator    & object)  const;
-                bool         operator!= (const locator    & object)  const;
-                bool         operator== (const scoped_ptr & object)  const;
-                bool         operator!= (const scoped_ptr & object)  const;
+                bool         operator== (const Data *) const;
+                bool         operator!= (const Data *) const;
+                bool         operator== (const locator &)  const;
+                bool         operator!= (const locator &)  const;
+                bool         operator== (const scoped_ptr &)  const;
+                bool         operator!= (const scoped_ptr &)  const;
 
-                bool         operator<  (const locator    & object)  const;
-                bool         operator>  (const locator    & object)  const;
-                bool         operator<= (const locator    & object)  const;
-                bool         operator>= (const locator    & object)  const;
+                bool         operator<  (const locator &)  const;
+                bool         operator>  (const locator &)  const;
+                bool         operator<= (const locator &)  const;
+                bool         operator>= (const locator &)  const;
 
-                template<typename Type>
+                template <typename Type>
                 friend bool  operator==
 
-                   (const Type * pointer,
-                    const typename scoped_ptr<Type>::locator & object);
+                   (const Type *,
+                    const typename scoped_ptr<Type>::locator &);
 
-                template<typename Type>
+                template <typename Type>
                 friend bool  operator!=
 
-                   (const Type * pointer,
-                    const typename scoped_ptr<Type>::locator & object);
+                   (const Type *,
+                    const typename scoped_ptr<Type>::locator &);
 
-                template<typename Type>
+                template <typename Type>
                 friend bool  operator==
 
-                   (const scoped_ptr<Type>                   & object1,
-                    const typename scoped_ptr<Type>::locator & object2);
+                   (const scoped_ptr<Type> &,
+                    const typename scoped_ptr<Type>::locator &);
 
-                template<typename Type>
+                template <typename Type>
                 friend bool  operator!=
 
-                   (const scoped_ptr<Type>                   & object1,
-                    const typename scoped_ptr<Type>::locator & object2);
+                   (const scoped_ptr<Type> &,
+                    const typename scoped_ptr<Type>::locator &);
 
                 // Subscript
 
-                const Data & operator[] (size_t pos) const;
-                      Data & operator[] (size_t pos);
+                const Data & operator[] (size_t) const;
+                      Data & operator[] (size_t);
 
                 // Typecast Conversion
 
@@ -196,11 +197,11 @@ class scoped_ptr/*: public safe_bool<>*/
                 operator Data   () const;
         };
 
-        void    assign (const locator & loc);
-        locator loc    () const;
+        void assign (const locator & loc);
+        locator loc () const;
 
-        const locator operator+ (int index) const;
-        const locator operator- (int index) const;
+        const locator operator+ (int) const;
+        const locator operator- (int) const;
 };
 
 
@@ -216,13 +217,13 @@ class scoped_ptr/*: public safe_bool<>*/
 // scoped_ptr Functions --------------------------------------------------
 
 
-template<typename Type>
+template <typename Type>
 void avert(scoped_ptr<Type> & object)
 {
     object.avert();
 }
 
-template<typename Type>
+template <typename Type>
 void swap(scoped_ptr<Type> & object1, scoped_ptr<Type> & object2)
 {
     object1.swap(object2);
@@ -230,20 +231,20 @@ void swap(scoped_ptr<Type> & object1, scoped_ptr<Type> & object2)
 
 // Friend Comparator
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::operator!= (const scoped_ptr & object) const
 {
     return _data_pointer != object._data_pointer;
 }
 
-template<typename Type>
+template <typename Type>
 bool operator== (const Type             * pointer,
                  const scoped_ptr<Type> & object)
 {
     return pointer == object._data_pointer;
 }
 
-template<typename Type>
+template <typename Type>
 bool operator!= (const Type             * pointer,
                  const scoped_ptr<Type> & object)
 {
@@ -254,7 +255,7 @@ bool operator!= (const Type             * pointer,
 // locator Functions -----------------------------------------------------
 
 
-template<typename Type>
+template <typename Type>
 void swap(typename scoped_ptr<Type>::locator & object1,
           typename scoped_ptr<Type>::locator & object2)
 {
@@ -263,29 +264,29 @@ void swap(typename scoped_ptr<Type>::locator & object1,
 
 // Friend Comparator
 
-template<typename Type>
+template <typename Type>
 bool operator== (const Type * pointer,
                  const typename scoped_ptr<Type>::locator & object)
 {
     return object == pointer;
 }
 
-template<typename Type>
+template <typename Type>
 bool operator!= (const Type * pointer,
                  const typename scoped_ptr<Type>::locator & object)
 {
     return object != pointer;
 }
 
-template<typename Type>
-bool operator== (const scoped_ptr<Type>                   & object1,
+template <typename Type>
+bool operator== (const scoped_ptr<Type> & object1,
                  const typename scoped_ptr<Type>::locator & object2)
 {
     return object2 == object1;
 }
 
-template<typename Type>
-bool operator!= (const scoped_ptr<Type>                   & object1,
+template <typename Type>
+bool operator!= (const scoped_ptr<Type> & object1,
                  const typename scoped_ptr<Type>::locator & object2)
 {
     return object2 != object1;
@@ -299,20 +300,20 @@ bool operator!= (const scoped_ptr<Type>                   & object1,
  * --- Constructors & Destructor --- *
  *************************************/
 
-template<typename Data>
+template <typename Data>
+scoped_ptr<Data>::locator::~locator() {}
+
+template <typename Data>
 scoped_ptr<Data>::locator::locator():
     _data_pointer(nullptr) {}
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::locator::locator(const locator & object):
     _data_pointer(object._data_pointer) {}
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::locator::locator(const scoped_ptr & object):
     _data_pointer(object._data_pointer) {}
-
-template<typename Data>
-scoped_ptr<Data>::locator::~locator() {}
 
 /**************************
 * --- Public Methods --- *
@@ -320,7 +321,7 @@ scoped_ptr<Data>::locator::~locator() {}
 
 // Accessors
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::any() const
 {
     return _data_pointer;
@@ -328,20 +329,20 @@ bool scoped_ptr<Data>::locator::any() const
 
 // Mutators
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::locator::avert()
 {
     if(_data_pointer)
         _data_pointer = nullptr;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::locator::assign(const locator & object)
 {
     _data_pointer = object._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::locator::swap(locator & object)
 {
     Data * temp = _data_pointer;
@@ -355,7 +356,7 @@ void scoped_ptr<Data>::locator::swap(locator & object)
 
 // Assignment
 
-template<typename Data>
+template <typename Data>
 typename scoped_ptr<Data>::locator &
 scoped_ptr<Data>::locator::operator=(const locator & object)
 {
@@ -363,7 +364,7 @@ scoped_ptr<Data>::locator::operator=(const locator & object)
     return *this;
 }
 
-template<typename Data>
+template <typename Data>
 typename scoped_ptr<Data>::locator &
 scoped_ptr<Data>::locator::operator=(const scoped_ptr & object)
 {
@@ -373,25 +374,25 @@ scoped_ptr<Data>::locator::operator=(const scoped_ptr & object)
 
 // Dereference
 
-template<typename Data>
+template <typename Data>
 Data & scoped_ptr<Data>::locator::operator*()
 {
     return *_data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 const Data & scoped_ptr<Data>::locator::operator*() const
 {
     return *_data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 Data * scoped_ptr<Data>::locator::operator->()
 {
     return *&_data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 const Data * scoped_ptr<Data>::locator::operator->() const
 {
     return *&_data_pointer;
@@ -399,63 +400,63 @@ const Data * scoped_ptr<Data>::locator::operator->() const
 
 // Comparator
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator==(const Data * pointer) const
 {
     return _data_pointer == pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator!=(const Data * pointer) const
 {
     return _data_pointer != pointer;
 }
 
-template<typename Data>
-bool scoped_ptr<Data>::locator::operator== (const locator & object) const
+template <typename Data>
+bool scoped_ptr<Data>::locator::operator==(const locator & object) const
 {
     return _data_pointer == object._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator!=(const locator & object) const
 {
     return _data_pointer != object._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool
 scoped_ptr<Data>::locator::operator==(const scoped_ptr & object) const
 {
     return _data_pointer == object._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool
 scoped_ptr<Data>::locator::operator!=(const scoped_ptr & object) const
 {
     return _data_pointer != object._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator<(const locator & object) const
 {
     return **this <  *object;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator>(const locator & object) const
 {
     return **this >  *object;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator<=(const locator & object) const
 {
     return **this <= *object;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::locator::operator>=(const locator & object) const
 {
     return **this >= *object;
@@ -463,28 +464,27 @@ bool scoped_ptr<Data>::locator::operator>=(const locator & object) const
 
 // Subscript
 
-template<typename Data>
+template <typename Data>
 const Data & scoped_ptr<Data>::locator::operator[](size_t pos) const
 {
     return _data_pointer[pos];
 }
 
-template<typename Data>
+template <typename Data>
 Data & scoped_ptr<Data>::locator::operator[](size_t pos)
 {
     return _data_pointer[pos];
 }
 
-
 // Typecast Conversion
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::locator::operator Data*() const
 {
     return _data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::locator::operator Data() const
 {
     return *_data_pointer;
@@ -498,35 +498,35 @@ scoped_ptr<Data>::locator::operator Data() const
  * --- Constructors & Destructor --- *
  *************************************/
 
-template<typename Data>
-scoped_ptr<Data>::scoped_ptr() :
+template <typename Data>
+scoped_ptr<Data>::~scoped_ptr()
+{
+    release();
+}
+
+template <typename Data>
+scoped_ptr<Data>::scoped_ptr():
     _is_aggregate(false),
     _data_pointer(nullptr) {}
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::scoped_ptr(Data * pointer, bool isAggregate):
     _is_aggregate(isAggregate),
     _data_pointer(pointer) {}
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::scoped_ptr(const scoped_ptr & object):
     _is_aggregate(object._is_aggregate)
 {
     copy(object);
 }
 
-template<typename Data>
-scoped_ptr<Data>::scoped_ptr(std::initializer_list<Data> list):
+template <typename Data>
+scoped_ptr<Data>::scoped_ptr(const std::initializer_list<Data> & list):
     _is_aggregate(true),
     _data_pointer(new Data[list.size()])
 {
     std::copy(list.begin(), list.end(), _data_pointer);
-}
-
-template<typename Data>
-scoped_ptr<Data>::~scoped_ptr()
-{
-    release();
 }
 
 
@@ -536,34 +536,39 @@ scoped_ptr<Data>::~scoped_ptr()
 
 // Accessors
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data> scoped_ptr<Data>::copy() const
 {
     scoped_ptr copyPtr(*this);
-
     return copyPtr;
 }
 
-template<typename Data>
+template <typename Data>
 Data * scoped_ptr<Data>::ref() const
 {
     return _data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::any() const
 {
     return _data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
+bool scoped_ptr<Data>::aggregate() const
+{
+    return _is_aggregate;
+}
+
+template <typename Data>
 void scoped_ptr<Data>::assign
     (const typename scoped_ptr<Data>::locator & loc)
 {
     _data_pointer = loc._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 typename scoped_ptr<Data>::locator scoped_ptr<Data>::pointer() const
 {
     locator object(*this);
@@ -573,7 +578,7 @@ typename scoped_ptr<Data>::locator scoped_ptr<Data>::pointer() const
 
 // Mutators
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::copy(const scoped_ptr & object)
 {
     if (_data_pointer)
@@ -584,7 +589,7 @@ void scoped_ptr<Data>::copy(const scoped_ptr & object)
         : nullptr;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::release()
 {
     if (!_data_pointer)
@@ -598,34 +603,34 @@ void scoped_ptr<Data>::release()
 	_data_pointer = nullptr;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::reallocate()
 {
     release();
     _data_pointer = new Data;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::reallocate(const Data & input)
 {
     release();
     _data_pointer = new Data(input);
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::avert()
 {
     if (_data_pointer)
         _data_pointer = nullptr;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::assign(const scoped_ptr & object)
 {
     _data_pointer = object._data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 void scoped_ptr<Data>::swap(scoped_ptr & object)
 {
     Data * temp = _data_pointer;
@@ -640,7 +645,7 @@ void scoped_ptr<Data>::swap(scoped_ptr & object)
 
 // Assignment
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data> & scoped_ptr<Data>::operator=(Data * pointer)
 {
     if (_data_pointer != pointer)
@@ -649,7 +654,7 @@ scoped_ptr<Data> & scoped_ptr<Data>::operator=(Data * pointer)
     return *this;
 }
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data> & scoped_ptr<Data>::operator=(const scoped_ptr & object)
 {
     _is_aggregate = object._is_aggregate;
@@ -659,25 +664,25 @@ scoped_ptr<Data> & scoped_ptr<Data>::operator=(const scoped_ptr & object)
 
 // Dereference
 
-template<typename Data>
+template <typename Data>
 Data & scoped_ptr<Data>::operator*()
 {
     return *_data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 const Data & scoped_ptr<Data>::operator*() const
 {
     return *_data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 Data * scoped_ptr<Data>::operator->()
 {
     return *&_data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 const Data * scoped_ptr<Data>::operator->() const
 {
     return *&_data_pointer;
@@ -685,19 +690,19 @@ const Data * scoped_ptr<Data>::operator->() const
 
 // Comparator
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::operator==(const Data * pointer) const
 {
     return _data_pointer == pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::operator!=(const Data * pointer) const
 {
     return _data_pointer != pointer;
 }
 
-template<typename Data>
+template <typename Data>
 bool scoped_ptr<Data>::operator==(const scoped_ptr & object) const
 {
     return _data_pointer == object._data_pointer;
@@ -705,13 +710,13 @@ bool scoped_ptr<Data>::operator==(const scoped_ptr & object) const
 
 // Subscript
 
-template<typename Data>
+template <typename Data>
 const Data & scoped_ptr<Data>::operator[](size_t pos) const
 {
     return _data_pointer[pos];
 }
 
-template<typename Data>
+template <typename Data>
 Data & scoped_ptr<Data>::operator[](size_t pos)
 {
     return _data_pointer[pos];
@@ -719,13 +724,13 @@ Data & scoped_ptr<Data>::operator[](size_t pos)
 
 // Typecast Conversion
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::operator Data*() const
 {
     return _data_pointer;
 }
 
-template<typename Data>
+template <typename Data>
 scoped_ptr<Data>::operator Data() const
 {
     return *_data_pointer;
@@ -733,7 +738,7 @@ scoped_ptr<Data>::operator Data() const
 
 // Pointer Shift
 
-template<typename Data>
+template <typename Data>
 const typename scoped_ptr<Data>::locator
 scoped_ptr<Data>::operator+(int index) const
 {
@@ -742,7 +747,7 @@ scoped_ptr<Data>::operator+(int index) const
     return temp;
 }
 
-template<typename Data>
+template <typename Data>
 const typename scoped_ptr<Data>::locator
 scoped_ptr<Data>::operator-(int index) const
 {
