@@ -89,7 +89,7 @@ class scoped_ptr/*: public safe_bool<>*/
                                  const scoped_ptr<Type> &);
 
         template <typename Type>
-        friend bool  operator!= (const Type * pointer,
+        friend bool  operator!= (const Type *,
                                  const scoped_ptr<Type> &);
 
         // Typecast Conversion
@@ -569,11 +569,9 @@ void scoped_ptr<Data>::assign
 }
 
 template <typename Data>
-typename scoped_ptr<Data>::locator scoped_ptr<Data>::pointer() const
+typename scoped_ptr<Data>::locator scoped_ptr<Data>::loc() const
 {
-    locator object(*this);
-
-    return object;
+    return locator(*this);
 }
 
 // Mutators
