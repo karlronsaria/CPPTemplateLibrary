@@ -38,7 +38,7 @@ public:
     }
 
     Array():
-         _array_list(NULL, true),
+         _array_list(nullptr, true),
          _size(0) {}
 
     Array(size_t arraySize):
@@ -53,8 +53,8 @@ public:
          _array_list(new T[arraySize], true),
          _size(arraySize)
     {
-        for (auto& item : *this)
-            item = content;
+        for (size_t i = 0; i < _size; ++i)
+            (*this)[i] = content;
     }
 
     Array(const Array& object):
@@ -116,7 +116,8 @@ public:
         _size = object._size;
 
         for (size_t index = 0; index < _size; index++)
-            _array_list[index] = object._array_list[index];
+            ((T*)_array_list.pointer())[index]
+            = ((T*)object._array_list.pointer())[index];
 
         return *this;
     }
@@ -172,28 +173,28 @@ public:
             return arithmetic::PostDecr(*this);
         }
 
-        Enumerator& operator+=(int pos) {
-            _pos = _pos + pos <= 0 ? _size : _pos + pos;
+        Enumerator& operator+=(int len) {
+            _pos = _pos + len <= 0 ? _size : _pos + len;
         }
 
-        const Enumerator operator+(int pos) const {
-            return arithmetic::Plus(*this, pos);
+        const Enumerator operator+(int len) const {
+            return arithmetic::Plus(*this, len);
         }
 
-        Enumerator operator+(int pos) {
-            return arithmetic::Plus(*this, pos);
+        Enumerator operator+(int len) {
+            return arithmetic::Plus(*this, len);
         }
 
-        Enumerator& operator-=(int pos) {
-            *this += -pos;
+        Enumerator& operator-=(int len) {
+            *this += -len;
         }
 
-        const Enumerator operator-(int pos) const {
-            return arithmetic::Plus(*this, -pos);
+        const Enumerator operator-(int len) const {
+            return arithmetic::Plus(*this, -len);
         }
 
-        Enumerator operator-(int pos) {
-            return arithmetic::Plus(*this, -pos);
+        Enumerator operator-(int len) {
+            return arithmetic::Plus(*this, -len);
         }
 
         bool operator==(const Enumerator& other) const {

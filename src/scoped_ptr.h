@@ -97,6 +97,11 @@ class scoped_ptr/*: public safe_bool<>*/
         operator Data * () const;
         operator Data   () const;
 
+        // Subscript
+
+        const Data & operator[] (size_t pos) const;
+              Data & operator[] (size_t pos);
+
 
         class locator
         {
@@ -178,6 +183,11 @@ class scoped_ptr/*: public safe_bool<>*/
 
                    (const scoped_ptr<Type>                   & object1,
                     const typename scoped_ptr<Type>::locator & object2);
+
+                // Subscript
+
+                const Data & operator[] (size_t pos) const;
+                      Data & operator[] (size_t pos);
 
                 // Typecast Conversion
 
@@ -348,7 +358,7 @@ void scoped_ptr<Data>::locator::swap(locator & object)
 
 template<typename Data>
 typename scoped_ptr<Data>::locator &
-scoped_ptr<Data>::locator::operator= (const locator & object)
+scoped_ptr<Data>::locator::operator=(const locator & object)
 {
     _data_pointer = object._data_pointer;
 
@@ -357,7 +367,7 @@ scoped_ptr<Data>::locator::operator= (const locator & object)
 
 template<typename Data>
 typename scoped_ptr<Data>::locator &
-scoped_ptr<Data>::locator::operator= (const scoped_ptr & object)
+scoped_ptr<Data>::locator::operator=(const scoped_ptr & object)
 {
     _data_pointer = object._data_pointer;
 
@@ -367,28 +377,28 @@ scoped_ptr<Data>::locator::operator= (const scoped_ptr & object)
 // Dereference
 
 template<typename Data>
-Data & scoped_ptr<Data>::locator::operator* ()
+Data & scoped_ptr<Data>::locator::operator*()
 {
     assert(_data_pointer);
     return *_data_pointer;
 }
 
 template<typename Data>
-const Data & scoped_ptr<Data>::locator::operator* () const
+const Data & scoped_ptr<Data>::locator::operator*() const
 {
     assert(_data_pointer);
     return *_data_pointer;
 }
 
 template<typename Data>
-Data * scoped_ptr<Data>::locator::operator-> ()
+Data * scoped_ptr<Data>::locator::operator->()
 {
     assert(_data_pointer);
     return *&_data_pointer;
 }
 
 template<typename Data>
-const Data * scoped_ptr<Data>::locator::operator-> () const
+const Data * scoped_ptr<Data>::locator::operator->() const
 {
     assert(_data_pointer);
     return *&_data_pointer;
@@ -397,13 +407,13 @@ const Data * scoped_ptr<Data>::locator::operator-> () const
 // Comparator
 
 template<typename Data>
-bool scoped_ptr<Data>::locator::operator== (const Data * & pointer) const
+bool scoped_ptr<Data>::locator::operator==(const Data * & pointer) const
 {
     return _data_pointer == pointer;
 }
 
 template<typename Data>
-bool scoped_ptr<Data>::locator::operator!= (const Data * & pointer) const
+bool scoped_ptr<Data>::locator::operator!=(const Data * & pointer) const
 {
     return _data_pointer != pointer;
 }
@@ -415,33 +425,33 @@ bool scoped_ptr<Data>::locator::operator== (const locator & object) const
 }
 
 template<typename Data>
-bool scoped_ptr<Data>::locator::operator!= (const locator & object) const
+bool scoped_ptr<Data>::locator::operator!=(const locator & object) const
 {
     return _data_pointer != object._data_pointer;
 }
 
 template<typename Data>
 bool
-scoped_ptr<Data>::locator::operator== (const scoped_ptr & object) const
+scoped_ptr<Data>::locator::operator==(const scoped_ptr & object) const
 {
     return _data_pointer == object._data_pointer;
 }
 
 template<typename Data>
 bool
-scoped_ptr<Data>::locator::operator!= (const scoped_ptr & object) const
+scoped_ptr<Data>::locator::operator!=(const scoped_ptr & object) const
 {
     return _data_pointer != object._data_pointer;
 }
 
 template<typename Data>
-bool scoped_ptr<Data>::locator::operator< (const locator & object) const
+bool scoped_ptr<Data>::locator::operator<(const locator & object) const
 {
     return **this <  *object;
 }
 
 template<typename Data>
-bool scoped_ptr<Data>::locator::operator> (const locator & object) const
+bool scoped_ptr<Data>::locator::operator>(const locator & object) const
 {
     return **this >  *object;
 }
@@ -458,16 +468,31 @@ bool scoped_ptr<Data>::locator::operator>=(const locator & object) const
     return **this >= *object;
 }
 
+// Subscript
+
+template<typename Data>
+const Data & scoped_ptr<Data>::locator::operator[](size_t pos) const
+{
+    return ((Data *)_data_pointer)[pos];
+}
+
+template<typename Data>
+Data & scoped_ptr<Data>::locator::operator[](size_t pos)
+{
+    return ((Data *)_data_pointer)[pos];
+}
+
+
 // Typecast Conversion
 
 template<typename Data>
-scoped_ptr<Data>::locator::operator Data * () const
+scoped_ptr<Data>::locator::operator Data*() const
 {
     return _data_pointer;
 }
 
 template<typename Data>
-scoped_ptr<Data>::locator::operator Data () const
+scoped_ptr<Data>::locator::operator Data() const
 {
     return *_data_pointer;
 }
@@ -685,6 +710,20 @@ template<typename Data>
 bool scoped_ptr<Data>::operator==(const scoped_ptr & object) const
 {
     return _data_pointer == object._data_pointer;
+}
+
+// Subscript
+
+template<typename Data>
+const Data & scoped_ptr<Data>::operator[](size_t pos) const
+{
+    return ((Data *)_data_pointer)[pos];
+}
+
+template<typename Data>
+Data & scoped_ptr<Data>::operator[](size_t pos)
+{
+    return ((Data *)_data_pointer)[pos];
 }
 
 // Typecast Conversion
