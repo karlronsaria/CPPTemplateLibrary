@@ -37,21 +37,27 @@ public:
         }
     }
 
+    virtual ~Array() = default;
+
     Array():
-         _array_list(nullptr, true),
-         _size(0) {}
+        _array_list(nullptr, true),
+        _size(0) {}
 
     Array(size_t arraySize):
-         _array_list(new T[arraySize], true),
-         _size(arraySize) {}
+        _array_list(new T[arraySize], true),
+        _size(arraySize) {}
 
-    Array(const std::initializer_list<T>& list) :
+    Array(const std::initializer_list<T>& list):
         _array_list(list),
-        _size(list.size()) {}
+        _size(list.size())
+    {
+        for (size_t i = 0; i < _size; ++i)
+            _array_list[i] = list[i];
+    }
 
     Array(size_t arraySize, const T& content):
-         _array_list(new T[arraySize], true),
-         _size(arraySize)
+        _array_list(new T[arraySize], true),
+        _size(arraySize)
     {
         for (size_t i = 0; i < _size; ++i)
             (*this)[i] = content;
@@ -62,22 +68,15 @@ public:
          _size(object.size())
     {
         Array::copy_values(
-            _array_list.reference(),
-            object._array_list.reference(),
+            _array_list.ref(),
+            object._array_list.ref(),
             _size,
             object._size
         );
     }
 
-    virtual ~Array() {}
-
-    virtual size_t size() const {
-        return _size;
-    }
-
-    virtual bool any() const {
-        return _size;
-    }
+    virtual size_t size() const { return _size; }
+    virtual bool any() const { return _size; }
 
     virtual void resize(size_t newSize) {
         if (newSize < _size)
@@ -86,8 +85,8 @@ public:
         Array temp(newSize);
 
         Array::copy_values(
-            temp._array_list.reference(),
-            _array_list.reference(),
+            temp._array_list.ref(),
+            _array_list.ref(),
             temp._size,
             _size
         );
@@ -109,15 +108,14 @@ public:
     }
 
     virtual Array& operator=(const Array& object) {
-        if (!_array_list.is_null())
-            _array_list.deallocate();
+        if (_array_list.any())
+            _array_list.release();
 
         _array_list = new T[object._size];
         _size = object._size;
 
         for (size_t index = 0; index < _size; index++)
-            ((T*)_array_list.pointer())[index]
-            = ((T*)object._array_list.pointer())[index];
+            _array_list[index] = object._array_list[index];
 
         return *this;
     }
@@ -129,7 +127,7 @@ public:
         size_t _pos;
 
         Enumerator(const Array& a, size_t pos):
-            _array_loc(a._array_list.pointer()),
+            _array_loc(a._array_list.loc()),
             _size(a._size),
             _pos(pos) {}
     public:

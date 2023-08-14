@@ -24,12 +24,12 @@ namespace listnode
 	{
 		try
 		{
-			if(list.is_null()) throw NoData(__FUNCTION__);
+			if(!list.any()) throw NoData(__FUNCTION__);
 			else
 			{
 			   typename scoped_ptr<Third_Node_Type>::locator cursor = list;
 
-			   while(!cursor.is_null())
+			   while(cursor.any())
 			   {
 			      std::cout << cursor->content() << " ";
 			      cursor = (cursor->*link)();

@@ -26,7 +26,7 @@ namespace node
 	{
 		try
 		{
-			if(node.is_null()) throw NoData(__FUNCTION__);
+			if(!node.any()) throw NoData(__FUNCTION__);
 			else
 			{
 				return Object_Type((node->*link_method)());
@@ -50,9 +50,9 @@ namespace node
 	{
     	try
     	{
-    		if(node.is_null())
+    		if(!node.any())
     			throw NoData(__FUNCTION__);
-    		else if((node->*link_method)().is_null())
+    		else if(!(node->*link_method)().any())
     			throw TerminalIterator(__FUNCTION__);
     		else
     		{
@@ -78,7 +78,7 @@ namespace node
 		 Third_Node_Type & (Fifth_Node_Type::*link)(),
 		 Forth_Node_Type & (Fifth_Node_Type::*other_link)())
 	{
-		if(!first.is_null() && !(first->*link)().is_null())
+		if(first.any() && (first->*link)().any())
 
 			Connect< Secnd_Node_Type,
 				     Third_Node_Type,

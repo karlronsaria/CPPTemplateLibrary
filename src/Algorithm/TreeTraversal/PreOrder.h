@@ -12,7 +12,7 @@ template <class Tree_Iterator_Type>
 void TraversePreOrder(Tree_Iterator_Type treeIt,
 		              void (*Function)(Tree_Iterator_Type &))
 {
-	if(!treeIt.is_null())
+	if(treeIt.any())
 	{
 		Function(treeIt);
 

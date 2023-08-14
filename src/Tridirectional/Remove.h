@@ -19,14 +19,14 @@ namespace ternarynode
 	{
 		First_Node_Type temp;
 
-		if(!node->left().is_null())
+		if(node->left().any())
 		{
 			GetRightEnd< First_Node_Type,
 			             First_Node_Type,
 			             First_Node_Type,
 			             Secnd_Node_Type >(node->left(), temp);
 
-			if(!node->left()->right().is_null())
+			if(node->left()->right().any())
 
 				ConnectRight< typename First_Node_Type::locator,
 				              First_Node_Type,
@@ -36,14 +36,14 @@ namespace ternarynode
 
 						(temp->parent(), temp->left());
 		}
-		else if(!node->right().is_null())
+		else if(node->right().any())
 		{
 			GetLeftEnd< First_Node_Type,
 			            First_Node_Type,
 			            First_Node_Type,
 			            Secnd_Node_Type >(node->right(), temp);
 
-			if(!node->right()->left().is_null())
+			if(node->right()->left().any())
 
 				ConnectLeft< typename First_Node_Type::locator,
 							 First_Node_Type,
@@ -54,7 +54,7 @@ namespace ternarynode
 						(temp->parent(), temp->right());
 		}
 
-		if(!temp.is_null())
+		if(temp.any())
 		{
 			if(temp != node->left())
 

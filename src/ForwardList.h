@@ -383,11 +383,11 @@ public:
     };
 
     const Enumerator begin() const {
-        return Enumerator::forward(_list.pointer(), _list->_head);
+        return Enumerator::forward(_list.loc(), _list->_head);
     }
 
     Enumerator begin() {
-        return Enumerator::forward(_list.pointer(), _list->_head);
+        return Enumerator::forward(_list.loc(), _list->_head);
     }
 
     const Enumerator end() const {

@@ -33,7 +33,7 @@ namespace avl
 	   	   	   	   ROTATE_NODE(RotateNode, First_Node_Type,
 	   	   	   			                   Secnd_Node_Type)))
 	{
-		if(treeNode.is_null()) treeNode.assign(insertNode);
+		if(!treeNode.any()) treeNode.assign(insertNode);
 		else
 		{
 			if(Order_Relation(treeNode->content(), insertNode->content()))

@@ -24,7 +24,7 @@ namespace listnode
 
 		ptr.assign(list);
 
-		while(index < pos && !ptr.is_null())
+		while(index < pos && ptr.any())
 		{
 			ptr.assign((ptr->*link)());
 

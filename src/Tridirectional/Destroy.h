@@ -23,8 +23,8 @@ namespace ternarynode
 	{
 		try
 		{
-			if(node.is_null()) throw NoData(__FUNCTION__);
-			else (node->*link)().deallocate();
+			if(!node.any()) throw NoData(__FUNCTION__);
+			else (node->*link)().release();
 		}
 		catch(Exception & e)
 		{

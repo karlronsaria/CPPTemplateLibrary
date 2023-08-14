@@ -38,7 +38,7 @@ class Exception
 //{
 //	try
 //	{
-//		if(container.is_null())  throw  NoData();
+//		if(!container.any())  throw  NoData();
 //		else                     return (container->*get_content)();
 //	}
 //	catch(NodeException & e)

@@ -97,7 +97,7 @@ const C & RowList<C, S>::operator[](size_t index) const
 
 	size_t count = 0;
 
-	while(count <= index && !cursor.is_null())
+	while(count <= index && cursor.any())
 	{
 		++cursor;
 		++count;
@@ -114,7 +114,7 @@ C & RowList<C, S>::operator[](size_t index)
 
 	size_t count = 0;
 
-	while(count <= index && !cursor.is_null())
+	while(count <= index && cursor.any())
 	{
 		++cursor;
 		++count;
@@ -139,7 +139,7 @@ std::ostream & operator<<(std::ostream         & out,
 {
 	typename S<C>::iterator cursor = object.begin();
 
-	while(!cursor.is_null())
+	while(cursor.any())
 	{
 		out << *cursor << " ";
 

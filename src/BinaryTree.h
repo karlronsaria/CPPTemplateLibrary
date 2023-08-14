@@ -44,9 +44,9 @@ class BinaryTree: public Collection
 		BinaryTree() {}
 	   ~BinaryTree() {}
 
-		bool   empty  () const { return _root.is_null(); }
+		bool   any    () const { return _root.any(); }
 		size_t size   () const { return ternarynode::Size(_root); }
-		void   clear  ()       { _root.deallocate();     }
+		void   clear  ()       { _root.release();     }
 		void   sprout ()       { _root.reallocate();     }
 
 		void sprout (const Content_Type & content)
@@ -89,15 +89,15 @@ class BinaryTree: public Collection
 				iterator(const BinaryTree & tree): _pointer(tree._root)  {}
 			   ~iterator() {}
 
-			    bool is_null() const { return _pointer.is_null(); }
+			    bool any() const { return _pointer.any(); }
 
 			    short is_leaf() const
 			    {
 			    	try
 			    	{
-			    		if(_pointer.is_null()) throw NoData(__FUNCTION__);
-			    		else return (_pointer->left().is_null() &&
-			    				     _pointer->right().isNull()) ? 1 : 0;
+			    		if(!_pointer.any()) throw NoData(__FUNCTION__);
+			    		else return (!_pointer->left().any() &&
+			    				     !_pointer->right().any()) ? 1 : 0;
 			    	}
 			    	catch(Exception & e)
 			    	{
@@ -139,7 +139,7 @@ class BinaryTree: public Collection
 
 							 ptr_link(&TernaryNode<Content_Type>::left));
 
-//					if(_pointer->left().is_null()) return *this;
+//					if(!_pointer->left().any()) return *this;
 //					else return iterator(_pointer->left());
 				}
 
@@ -156,7 +156,7 @@ class BinaryTree: public Collection
 
 							 ptr_link(&TernaryNode<Content_Type>::right));
 
-//					if(_pointer->left().is_null()) return *this;
+//					if(!_pointer->left().any()) return *this;
 //					else return iterator(_pointer->right());
 				}
 
@@ -173,7 +173,7 @@ class BinaryTree: public Collection
 
 							 ptr_link(&TernaryNode<Content_Type>::parent));
 
-//					if(_pointer->left().is_null()) return *this;
+//					if(!_pointer->left().any()) return *this;
 //					else return iterator(_pointer->parent());
 				}
 

@@ -18,7 +18,7 @@ namespace splay
 
 	bool Search(First_Node_Type & node, const Content_Type & key)
 	{
-		return node.is_null() || node->content() == key;
+		return !node.any() || node->content() == key;
 	}
 
 
@@ -27,7 +27,7 @@ namespace splay
 
 	bool Insert(First_Node_Type & node, const Content_Type & key)
 	{
-		if(node.is_null())
+		if(!node.any())
 		{
 			node.reallocate();
 
@@ -45,7 +45,7 @@ namespace splay
 
 	bool Remove(First_Node_Type & node, const Content_Type & key)
 	{
-		if(node.is_null()) return true;
+		if(!node.any()) return true;
 		else if(node->content() == key)
 		{
 			ternarynode::Remove<First_Node_Type, Secnd_Node_Type>(node);

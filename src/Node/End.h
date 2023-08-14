@@ -23,7 +23,7 @@ namespace node
 	{
 		end.assign(node);
 
-		while(!(end->*link)().is_null()) end.assign((end->*link)());
+		while((end->*link)().any()) end.assign((end->*link)());
 	}
 }
 

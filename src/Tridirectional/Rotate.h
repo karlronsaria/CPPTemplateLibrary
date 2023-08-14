@@ -21,7 +21,7 @@ namespace ternarynode
 		 First_Node_Type & (Secnd_Node_Type::*link)(),
 		 First_Node_Type & (Secnd_Node_Type::*other_link)())
 	{
-		if(!(node->*link)().is_null())
+		if((node->*link)().any())
 		{
 			First_Node_Type temp;
 

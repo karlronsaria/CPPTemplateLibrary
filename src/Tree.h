@@ -31,9 +31,9 @@ class Tree
 		Tree() {}
 	   ~Tree() {}
 
-		bool empty  () const { return _root.is_null(); }
-		void clear  ()       { _root.deallocate();     }
-		void sprout ()       { _root.reallocate();     }
+		bool any    () const { return _root.any(); }
+		void clear  ()       { _root.release();     }
+		void sprout ()       { _root.release();     }
 
 		void sprout (const Content_Type & content)
 		{

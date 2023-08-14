@@ -19,7 +19,7 @@ namespace avl
 //	{
 //		leftEnd.assign(node);
 //
-//		while(!leftEnd->left().is_null())
+//		while(leftEnd->left().any())
 //			leftEnd.assign(leftEnd->left());
 //	}
 
@@ -45,9 +45,9 @@ namespace avl
 				   ROTATE_NODE(RotateNode, First_Node_Type,
 						                   Secnd_Node_Type)))
 	{
-		if(!node.is_null())
+		if(node.any())
 		{
-			if(node->left().is_null()) return node->right();
+			if(!node->left().any()) return node->right();
 
 			ternarynode::ConnectLeft< First_Node_Type,
 									  Secnd_Node_Type >
@@ -86,14 +86,14 @@ namespace avl
 				   ROTATE_NODE(RotateNode, First_Node_Type,
 						                   Secnd_Node_Type)))
 	{
-		if(node.is_null()) return false;
+		if(!node.any()) return false;
 		else
 		{
 			if(key == node->content())
 			{
 				First_Node_Type leftEnd;
 
-				if(node->right().is_null())
+				if(!node->right().any())
 
 					leftEnd.assign(node->left());
 
@@ -106,7 +106,7 @@ namespace avl
 
 									(node->right(), leftEnd);
 
-				if(leftEnd.is_null()) node.deallocate();
+				if(!leftEnd.any()) node.release();
 				else
 				{
 					ternarynode::ConnectRight< First_Node_Type,
@@ -125,7 +125,7 @@ namespace avl
 
 					ternarynode::Orphan(node);
 
-					node.deallocate();
+					node.release();
 
 					node.assign(leftEnd);
 

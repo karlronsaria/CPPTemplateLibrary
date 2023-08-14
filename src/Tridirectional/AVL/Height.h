@@ -30,7 +30,7 @@ namespace avl
 	template <class Node_Type>
 	height_t HeightOf(const Node_Type & node)
 	{
-		return node.is_null() ? 0 : node->height();
+		return node.any() ? node->height() : 0;
 	}
 
 

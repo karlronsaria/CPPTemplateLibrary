@@ -20,7 +20,7 @@ namespace ternarynode
 		(const First_Node_Type & node, size_t & size,
 		 const Secnd_Node_Type & (*Modify)(const First_Node_Type &))
 	{
-		if(!node.is_null())
+		if(node.any())
 		{
 			++size;
 

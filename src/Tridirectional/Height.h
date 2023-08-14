@@ -24,7 +24,7 @@ namespace ternarynode
 		(const First_Node_Type & node, height_t depth, height_t & height,
 		 const Secnd_Node_Type & (*Modify)(const First_Node_Type &))
 	{
-		if(!node.is_null())
+		if(node.any())
 		{
 			if(depth > height) height = depth;
 
@@ -75,7 +75,7 @@ namespace ternarynode
 	{
 		First_Node_Type cursor;
 
-		while(!cursor.is_null())
+		while(cursor.any())
 		{
 			++depth;
 			cursor = Modify(cursor).parent();

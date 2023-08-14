@@ -47,8 +47,8 @@ class SplayTree
 		SplayTree   () {}
 	   ~SplayTree   () {}
 
-	    bool empty  () const { return _root.is_null(); }
-	    void clear  () const { _root.deallocate();     }
+	    bool any    () const { return _root.any(); }
+	    void clear  () const { _root.release();     }
 
 			  Content_Type & root ()       { return _root->content(); }
 		const Content_Type & root () const { return _root->content(); }
@@ -77,7 +77,7 @@ class SplayTree
 				iterator (const SplayTree &);
 			   ~iterator ();
 
-			    bool     is_null () const;
+			    bool     any     () const;
 			    short    is_leaf () const;
 
 				iterator left    () const;
@@ -257,13 +257,13 @@ SplayTree<C, R>::iterator::~iterator() {}
 // - Queries
 
 /*************************************************************************
- * is_null - Returns whether the iterator is pointing to null.           *
+ * any     - Returns whether the iterator is not pointing to null.       *
  *************************************************************************/
 
 template <typename C, bool (*R)(const C &, const C &)>
-bool SplayTree<C, R>::iterator::is_null() const
+bool SplayTree<C, R>::iterator::any() const
 {
-	return _pointer.is_null();
+	return _pointer.any();
 }
 
 /*************************************************************************
@@ -276,9 +276,9 @@ short SplayTree<C, R>::iterator::is_leaf() const
 {
 	try
 	{
-		if(_pointer.is_null()) throw NoData(__FUNCTION__);
-		else return (_pointer->left().is_null() &&
-					 _pointer->right().isNull()) ? 1 : 0;
+		if(!_pointer.any()) throw NoData(__FUNCTION__);
+		else return (!_pointer->left().any() &&
+					 !_pointer->right().any()) ? 1 : 0;
 	}
 	catch(Exception & e)
 	{

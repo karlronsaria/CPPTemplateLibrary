@@ -28,12 +28,12 @@ namespace node
 	{
 		try
 		{
-			if(first.is_null())
+			if(!first.any())
 			{
-				if(secnd.is_null())   throw NoData(__FUNCTION__);
+				if(!secnd.any())   throw NoData(__FUNCTION__);
 				else                  (secnd->*other_link)().avert();
 			}
-			else if(secnd.is_null())  (first->*link)().avert();
+			else if(!secnd.any())  (first->*link)().avert();
 			else if(first == secnd)   throw CircularNode(__FUNCTION__);
 			else
 			{

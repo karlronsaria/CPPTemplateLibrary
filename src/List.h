@@ -449,19 +449,19 @@ public:
     };
 
     const Enumerator begin() const {
-        return Enumerator::forward(_list.pointer(), _list->_head);
+        return Enumerator::forward(_list.loc(), _list->_head);
     }
 
     Enumerator begin() {
-        return Enumerator::forward(_list.pointer(), _list->_head);
+        return Enumerator::forward(_list.loc(), _list->_head);
     }
 
     const Enumerator begin_reverse() const {
-        return Enumerator::reverse(_list.pointer(), _list->_tail);
+        return Enumerator::reverse(_list.loc(), _list->_tail);
     }
 
     Enumerator begin_reverse() {
-        return Enumerator::reverse(_list.pointer(), _list->_tail);
+        return Enumerator::reverse(_list.loc(), _list->_tail);
     }
 
     const Enumerator end() const {
