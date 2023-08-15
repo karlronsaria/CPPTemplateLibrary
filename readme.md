@@ -37,7 +37,7 @@ Numeric types with modular arithmetic
 ## Considerations
 
 - [x] skiplist
-  - [ ] map
+  - [x] map
 - hash table
   - set
   - map
