@@ -4,21 +4,21 @@
 #include <sstream>
 
 namespace enumerable {
-    template <typename C>
+    template <typename C, typename T>
     std::string ToString(
         const C& c,
         const std::string& delim,
-        std::string (*toStream)(const C&)
+        std::string (*toString)(const T&)
     ) {
         if (!c.any())
             return "";
 
         std::ostringstream oss;
         auto it = c.begin();
-        oss << *it;
+        oss << toString(*it);
 
         while (++it != c.end())
-            oss << delim << *it;
+            oss << delim << toString(*it);
 
         return oss.str();
     }

@@ -404,11 +404,13 @@ namespace skiplist {
         }
 
         std::string to_string(const std::string& delim = " ") const {
-            return enumerable::ToString(*this, delim, [](const Pair& p) -> std::string {
-                std::ostringstream oss;
-                oss << p.key << ':' << p.value;
-                return oss.str();
-            });
+            return enumerable::ToString<SortedSet<Pair, _compare, Alloc>, Pair>(
+                _set, delim,
+                [](const Pair& p) -> std::string {
+					std::ostringstream oss;
+					oss << p.key << ':' << p.value;
+					return oss.str();
+				});
         }
 
         std::ostream& operator<<(std::ostream& out) const {
