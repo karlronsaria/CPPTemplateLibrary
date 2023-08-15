@@ -221,14 +221,6 @@ public:
             doThis(pair.key, pair.value);
         });
     }
-
-    // // todo
-    // std::vector<avltree::NodeInfo<T>>
-    // to_vector() const {
-    //     std::vector<avltree::NodeInfo<T>> list;
-    //     avltree::to_vector(_root, 0, list);
-    //     return list;
-    // }
 };
 
 #endif /* AVLSORTEDSET_H_ */

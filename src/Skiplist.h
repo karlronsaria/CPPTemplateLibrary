@@ -380,17 +380,18 @@ namespace skiplist {
             return _set.remove(Pair{ key, ValueT() });
         }
 
-        class Enumerator: public SortedSet<Pair, _compare, Alloc>::Enumerator {};
-
-        const Enumerator begin() const {
+        const typename SortedSet<Pair, _compare, Alloc>::Enumerator
+        begin() const {
             return _set.begin();
         }
 
-        Enumerator begin() {
+        const typename SortedSet<Pair, _compare, Alloc>::Enumerator
+        begin() {
             return _set.begin();
         }
 
-        const Enumerator end() const {
+        const typename SortedSet<Pair, _compare, Alloc>::Enumerator
+        end() const {
             return _set.end();
         }
 
@@ -407,10 +408,10 @@ namespace skiplist {
             return enumerable::ToString<SortedSet<Pair, _compare, Alloc>, Pair>(
                 _set, delim,
                 [](const Pair& p) -> std::string {
-					std::ostringstream oss;
-					oss << p.key << ':' << p.value;
-					return oss.str();
-				});
+                    std::ostringstream oss;
+                    oss << p.key << ':' << p.value;
+                    return oss.str();
+                });
         }
 
         std::ostream& operator<<(std::ostream& out) const {
@@ -432,4 +433,3 @@ namespace skiplist {
 #undef SORTED_MAP_TEMPLATE_WITH_DEFAULTS
 #undef SORTED_MAP_TEMPLATE
 #endif /* SKIPLIST_H_ */
-
