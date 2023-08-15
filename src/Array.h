@@ -59,7 +59,7 @@ public:
         _array_list(new T[arraySize], true),
         _size(arraySize)
     {
-        for (size_t i = 0; i < _size; ++i)
+        for (int i = 0; i < (int)_size; ++i)
             (*this)[i] = content;
     }
 

@@ -20,7 +20,14 @@ template < \
     template <typename> class Allocator \
 >
 
-#define SORTED_MAP_TEMPLATE_WITH_DEFAULTS(Key_Type, Value_Type, Compare, Default_Compare, Allocator, Default_Allocator) \
+#define SORTED_MAP_TEMPLATE_WITH_DEFAULTS( \
+    Key_Type, \
+    Value_Type, \
+    Compare, \
+    Default_Compare, \
+    Allocator, \
+    Default_Allocator \
+) \
 template < \
     typename Key_Type, \
     typename Value_Type, \
@@ -43,6 +50,7 @@ namespace skiplist {
         Alloc<Node*> next;
 
         Node(size_t size) :
+            payload(T()),
             next(size, nullptr) {}
 
         Node(const T& p, size_t size) :
@@ -126,7 +134,7 @@ namespace skiplist {
         if (!n)
             return nullptr;
 
-        for (size_t i = 0; i < n->next.size(); ++i)
+        for (int i = 0; i < (int)n->next.size(); ++i)
             // iterate
             n->next[i] = clear<T, A>(n->next[i]);
 
@@ -142,7 +150,7 @@ namespace skiplist {
         static void (*_singleton)();
 
         static void set_seed() {
-            srand(time(nullptr));
+            srand((unsigned int)time(nullptr));
             _singleton = []() {};
         }
 
@@ -202,7 +210,9 @@ namespace skiplist {
         bool push(const T& payload) {
             auto n = new Node<T, Alloc>(payload, next_random(_levels) + 1);
 
-            if (!skiplist::push<T, R, Alloc>(_head, n, _levels - 1)) {
+            if (!skiplist::push<T, R, Alloc>(
+                _head, n, (int)_levels - 1
+            )) {
                 delete n;
                 return false;
             }
@@ -215,7 +225,7 @@ namespace skiplist {
             auto n = skiplist::remove<T, R, Alloc>(
                 _head,
                 payload,
-                _levels - 1
+                (int)_levels - 1
             );
 
             if (!n)
@@ -230,7 +240,7 @@ namespace skiplist {
             auto cursor = _head;
             int phi = 1;
 
-            for (int i = _levels - 1; i >= 0; --i) {
+            for (int i = (int)_levels - 1; i >= 0; --i) {
                 while (cursor->next[i]
                     && 1 == (phi = R(payload, cursor->next[i]->payload))
                     )
