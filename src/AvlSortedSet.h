@@ -167,7 +167,7 @@ public:
     bool any() const { return _set.any(); }
 
     bool contains(const KeyT& key) const {
-        return _set.contains(Pair{key, ValueT()});
+        return _set.contains(Pair{ key, ValueT() });
     }
 
     bool peek(ValueT& item) const {

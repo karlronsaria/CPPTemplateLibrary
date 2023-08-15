@@ -13,6 +13,9 @@ A doubly-linked queue with vector-like operations and an enumerator
 - ``AvlSortedSet.h``
 A logarithmic sorted set and sorted map using the AVL BST model
 
+- ``Skiplist.h``
+A probabilistic sorted set and sorted map using the skiplist model
+
 - ``Table.h``
 A two-dimensional array
 
@@ -33,10 +36,11 @@ Numeric types with modular arithmetic
 
 ## Considerations
 
+- [x] skiplist
+  - [ ] map
 - hash table
   - set
   - map
-- skip list
 - B tree
 - graph
   - dfs
