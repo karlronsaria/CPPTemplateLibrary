@@ -19,6 +19,9 @@ class Array: public Collection, Aggregate<T> {
 private:
     scoped_ptr<T> _array_list;
     size_t _size;
+protected:
+    virtual size_t first_pos() const { return 0; }
+    virtual size_t last_pos() const { return _size; }
 public:
     template <typename Type>
     static void copy_values(
@@ -206,15 +209,15 @@ public:
     };
 
     const Enumerator begin() const {
-        return Enumerator(*this, 0);
+        return Enumerator(*this, this->first_pos());
     }
 
     Enumerator begin() {
-        return Enumerator(*this, 0);
+        return Enumerator(*this, this->first_pos());
     }
 
     const Enumerator end() const {
-        return Enumerator(*this, _size);
+        return Enumerator(*this, this->last_pos());
     }
 
     std::string to_string(const std::string& delim = " ") const {

@@ -41,6 +41,7 @@ Numeric types with modular arithmetic
 - hash table
   - set
   - map
+- bitset
 - B tree
 - graph
   - dfs

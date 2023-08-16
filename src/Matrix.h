@@ -51,7 +51,7 @@ public:
 
     Matrix(
         const std::initializer_list
-			<std::initializer_list<Content_Type>>&
+            <std::initializer_list<Content_Type>>&
         components
     ): Table_Class<Content_Type>(components) {}
 
@@ -75,6 +75,14 @@ public:
 
     using Table_Class<Content_Type>::rows;
     using Table_Class<Content_Type>::cols;
+
+    template <template <typename> class Alloc = Array>
+    void to_sparse(
+        Alloc<Content_Type>&,
+        Alloc<size_t>&,
+        Alloc<size_t>&,
+        const Content_Type& zero = (Content_Type)0
+    );
 
     /******************************
      * --- Operator Overloads --- *
@@ -420,6 +428,34 @@ Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const {
 		1.0/(long double)(determ),
 		adjoint()
 	);
+}
+
+template <typename C, template<typename> class T>
+template <template <typename> class A = Array>
+void Matrix<C, T>::to_sparse(
+    A<C>& vertices,
+    A<size_t>& rows,
+    A<size_t>& cols,
+    const C& zero
+) {
+    vertices = A<C>(Matrix::size());
+    rows = A<size_t>(Matrix::size());
+    cols = A<size_t>(Matrix::size());
+    int index = 0;
+    C temp;
+
+    for (int row = 0; row < Matrix::rows(); ++row) {
+        for (int col = 0; col < Matrix::cols(); ++col) {
+            temp = (*this)[row][col];
+
+            if (temp != zero) {
+                vertices[index] = temp;
+                rows[index] = row;
+                cols[index] = col;
+                index = index + 1;
+            }
+        }
+    }
 }
 
 
