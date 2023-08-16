@@ -10,7 +10,7 @@ private:
     size_t _tail;
 protected:
     virtual size_t first_pos() const { return _head; }
-    virtual size_t last_pos() const { return _tail + 1; }
+    virtual size_t last_pos() const { return _tail; }
 public:
     virtual ~Queue() = default;
     Queue& operator=(const Queue&) = default;

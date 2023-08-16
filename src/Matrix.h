@@ -13,6 +13,7 @@
 #include "Rational.h"
 #include "Table.h"
 #include "Specialize/NumericClass.h"
+#include "Queue.h"
 
 template<
     typename Content_Type,
@@ -76,13 +77,15 @@ public:
     using Table_Class<Content_Type>::rows;
     using Table_Class<Content_Type>::cols;
 
-    template <template <typename> class Alloc = Array>
-    void to_sparse(
-        Alloc<Content_Type>&,
-        Alloc<size_t>&,
-        Alloc<size_t>&,
+    struct sparse_t {
+        Queue<Content_Type> vertices;
+        Queue<size_t> rows;
+        Queue<size_t> cols;
+    };
+
+    sparse_t to_sparse(
         const Content_Type& zero = (Content_Type)0
-    );
+    ) const;
 
     /******************************
      * --- Operator Overloads --- *
@@ -308,49 +311,49 @@ Matrix<C, T> Matrix<C, T>::reduction() const {
 
 template <typename C, template<typename> class T>
 C Matrix<C, T>::determinant_recurse() const throw(const char *) {
-	size_t cols = cols();
+    size_t cols = cols();
 
     switch (cols) {
     case 0:
         return 0;
     case 1:
-		return (*this)[0][0];
+        return (*this)[0][0];
     case 2:
-		return (*this)[0][0] * (*this)[1][1]
-			 - (*this)[1][0] * (*this)[0][1];
+        return (*this)[0][0] * (*this)[1][1]
+             - (*this)[1][0] * (*this)[0][1];
     default:
         break;
     }
 
-	if (cols > 6)
-		throw "The size of this matrix is impractical "
-			  "for recursive determinant calculation.";
+    if (cols > 6)
+        throw "The size of this matrix is impractical "
+              "for recursive determinant calculation.";
 
     C determ = 0;
-	int coefficient = 1;
+    int coefficient = 1;
 
-	for (size_t col = 0; col < cols; col++) {
-		determ += coefficient
+    for (size_t col = 0; col < cols; col++) {
+        determ += coefficient
             * (*this)[0][col]
             * partial(0, col).determinant_recurse();
 
-		if (cols % 2 == 0)
-			coefficient *= -1;
-	}
+        if (cols % 2 == 0)
+            coefficient *= -1;
+    }
 
     return determ;
 }
 
 template <typename C, template<typename> class T>
 Rational<long> Matrix<C, T>::determinant() const {
-	Rational<long> determ = 1;
-	Matrix<Rational<long>, T> temp = *this;
-	temp = temp.reduction();
+    Rational<long> determ = 1;
+    Matrix<Rational<long>, T> temp = *this;
+    temp = temp.reduction();
 
-	for (size_t i = 0; i < temp.size(); ++i)
-		determ *= temp[i][i];
+    for (size_t i = 0; i < temp.size(); ++i)
+        determ *= temp[i][i];
 
-	return determ;
+    return determ;
 }
 
 template <typename C, template<typename> class T>
@@ -358,25 +361,25 @@ Matrix<C, T> Matrix<C, T>::cofactor() const {
     if (Matrix::size() == 0)
         return Matrix();
 
-	int rowCoeff = 1;
-	int colCoeff = 1;
-	size_t size = Matrix::size();
-	Matrix cofactorMatrix = square(size);
+    int rowCoeff = 1;
+    int colCoeff = 1;
+    size_t size = Matrix::size();
+    Matrix cofactorMatrix = square(size);
 
-	for (size_t row = 0; row < size; row++) {
-		for (size_t col = 0; col < size; col++) {
-			cofactorMatrix[row][col]
+    for (size_t row = 0; row < size; row++) {
+        for (size_t col = 0; col < size; col++) {
+            cofactorMatrix[row][col]
                 = rowCoeff
                 * colCoeff
                 * partial(row, col).determinant();
 
-			if (size % 2 == 0)
-				colCoeff *= -1;
-		}
+            if (size % 2 == 0)
+                colCoeff *= -1;
+        }
 
-		if (size % 2 == 0)
-			rowCoeff *= -1;
-	}
+        if (size % 2 == 0)
+            rowCoeff *= -1;
+    }
 
     return cofactorMatrix;
 }
@@ -388,74 +391,71 @@ Matrix<C, T> Matrix<C, T>::adjoint() const {
     if (cofactorMatrix.size() == 0)
         return Matrix();
 
-	return cofactorMatrix.transpose();
+    return cofactorMatrix.transpose();
 }
 
 template <typename C, template<typename> class T>
 Matrix<float, T> Matrix<C, T>::inverse() const {
-	int determ = determinant();
+    int determ = determinant();
 
-	if (determ == 0)
-		return Matrix();
+    if (determ == 0)
+        return Matrix();
 
     return Matrix<float, T>::scalar_product(
-		1.0/float(determ),
-		adjoint()
-	);
+        1.0/float(determ),
+        adjoint()
+    );
 }
 
 template <typename C, template<typename> class T>
 Matrix<double, T> Matrix<C, T>::precise_inverse() const {
-	int determ = determinant();
+    int determ = determinant();
 
-	if (determ == 0)
-		return Matrix();
+    if (determ == 0)
+        return Matrix();
 
     return Matrix<double, T>::scalar_product(
-		1.0/double(determ),
-		adjoint()
-	);
+        1.0/double(determ),
+        adjoint()
+    );
 }
 
 template <typename C, template<typename> class T>
 Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const {
-	int determ = determinant();
+    int determ = determinant();
 
-	if (determ == 0)
-		return Matrix();
+    if (determ == 0)
+        return Matrix();
 
     return Matrix<long double, T>::scalar_product(
-		1.0/(long double)(determ),
-		adjoint()
-	);
+        1.0/(long double)(determ),
+        adjoint()
+    );
 }
 
 template <typename C, template<typename> class T>
-template <template <typename> class A = Array>
-void Matrix<C, T>::to_sparse(
-    A<C>& vertices,
-    A<size_t>& rows,
-    A<size_t>& cols,
+typename Matrix<C, T>::sparse_t
+Matrix<C, T>::to_sparse(
     const C& zero
-) {
-    vertices = A<C>(Matrix::size());
-    rows = A<size_t>(Matrix::size());
-    cols = A<size_t>(Matrix::size());
+) const {
     int index = 0;
     C temp;
+    auto sparse = sparse_t();
 
-    for (int row = 0; row < Matrix::rows(); ++row) {
-        for (int col = 0; col < Matrix::cols(); ++col) {
+    for (int row = 0; row < this->rows(); ++row) {
+        for (int col = 0; col < this->cols(); ++col) {
             temp = (*this)[row][col];
 
             if (temp != zero) {
-                vertices[index] = temp;
-                rows[index] = row;
-                cols[index] = col;
+                sparse.vertices.push(temp);
+                sparse.rows.push(row);
+                sparse.cols.push(col);
                 index = index + 1;
             }
         }
     }
+
+    return sparse;
 }
 
 
@@ -513,13 +513,13 @@ const Matrix<C, T> Matrix<C, T>::sum(
     if (!are_congruent(summand1, summand2))
         return Matrix();
 
-	size_t rows = summand1.rows();
-	size_t cols = summand1.cols();
-	Matrix sumMatrix(rows, cols);
+    size_t rows = summand1.rows();
+    size_t cols = summand1.cols();
+    Matrix sumMatrix(rows, cols);
 
-	for (size_t row = 0; row < rows; row++)
-		for (size_t col = 0; col < cols; col++)
-			sumMatrix[row][col]
+    for (size_t row = 0; row < rows; row++)
+        for (size_t col = 0; col < cols; col++)
+            sumMatrix[row][col]
                 = (C)(summand1[row][col] + summand2[row][col]);
 
     return sumMatrix;
@@ -555,8 +555,8 @@ C Matrix<C, T>::dot_product(
 
     double product = 0;
 
-	for (size_t count = 0; count < factor1.cols(); count++)
-		product += factor1[row][count] * factor2[count][col];
+    for (size_t count = 0; count < factor1.cols(); count++)
+        product += factor1[row][count] * factor2[count][col];
 
     return (C)product;
 }
@@ -571,10 +571,10 @@ C Matrix<C, T>::dot_product(
         return (C)0;
 
     double product = 0;
-	size_t cols = factor1.cols();
+    size_t cols = factor1.cols();
 
-	for (size_t count = 0; count < cols; count++)
-		product += factor1[0][count] * factor2[count][0];
+    for (size_t count = 0; count < cols; count++)
+        product += factor1[0][count] * factor2[count][0];
 
     return (C)product;
 }
@@ -583,23 +583,23 @@ template <typename C, template<typename> class T>
 template <typename B>
 const Matrix<C, T> Matrix<C, T>::cross_product(
     const Matrix & factor1,
-	const Matrix<B, T> & factor2
+    const Matrix<B, T> & factor2
 ) {
-	if (!are_multiplicable(factor1, factor2))
-		return Matrix();
+    if (!are_multiplicable(factor1, factor2))
+        return Matrix();
 
-	size_t rows = factor1.rows();
-	size_t cols = factor2.cols();
-	Matrix productMatrix(rows, cols);
+    size_t rows = factor1.rows();
+    size_t cols = factor2.cols();
+    Matrix productMatrix(rows, cols);
 
-	for (size_t row = 0; row < rows; row++)
-		for (size_t col = 0; col < cols; col++)
+    for (size_t row = 0; row < rows; row++)
+        for (size_t col = 0; col < cols; col++)
             productMatrix[row][col] = (C)round(
-				Matrix<double, T>::dot_product(
-					factor1, row,
-					factor2, col
-				)
-			);
+                Matrix<double, T>::dot_product(
+                    factor1, row,
+                    factor2, col
+                )
+            );
 
     return productMatrix;
 }
