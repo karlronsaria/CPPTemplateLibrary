@@ -34,6 +34,9 @@ An ordered pair that represents a complex number, with mathematical operations
 - ``Modular.h``
 Numeric types with modular arithmetic
 
+- ``VectorBitset.h``
+A resizeable bitset
+
 ## Considerations
 
 - [x] skiplist
@@ -41,17 +44,21 @@ Numeric types with modular arithmetic
 - hash table
   - set
   - map
-- bitset
+- [x] bitset
 - B tree
+- priority queue
 - graph
+  - [x] set
+  - [x] map
+    - cancel: graph map describes a matrix
   - dfs
   - bfs
   - dijkstra's algorithm
   - minimum spanning tree
 - quaternion
 - tensor
-- matrix
-  - to_sparse: M -> M
+- [x] matrix
+  - [x] to_sparse: M -> M
 - ternary tree
 - sort
 

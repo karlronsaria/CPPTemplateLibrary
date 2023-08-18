@@ -11,6 +11,7 @@ public:
     GraphSet() = default;
     GraphSet& operator=(const GraphSet&) = default;
     GraphSet(const GraphSet&) = default;
+
     GraphSet(size_t size):
         Alloc<vector_bitset<>>(size)
     {
@@ -32,8 +33,17 @@ public:
     }
 
     GraphSet& push(size_t from, size_t to) {
-        (*this)[(int)from].set[to];
+        (*this)[(int)from].set(to);
         return *this;
+    }
+
+    GraphSet& pop(size_t from, size_t to) {
+        (*this)[(int)from].set(to, false);
+        return *this;
+    }
+
+    bool contains(size_t from, size_t to) const {
+        return *this[from][to];
     }
 
     std::string to_string() const {
@@ -54,4 +64,3 @@ std::ostream& operator<<(std::ostream& out, const GraphSet<A>& o) {
 }
 
 #endif /* GRAPH_H_ */
-

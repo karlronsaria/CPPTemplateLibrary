@@ -8,6 +8,7 @@
 #ifndef MATRIX_H_
 #define MATRIX_H_
 
+#include <functional>
 #include <sstream>
 #include "modular_int.h"
 #include "Rational.h"
@@ -29,6 +30,8 @@ public:
 
     virtual ~Matrix() = default;
     Matrix() = default;
+    Matrix(const Matrix &) = default;
+    Matrix & operator=(const Matrix &) = default;
 
     Matrix(size_t rows, size_t cols):
         Table_Class<Content_Type>(rows, cols) {}
@@ -36,16 +39,13 @@ public:
     Matrix(size_t rows, size_t cols, const Content_Type& input):
         Table_Class<Content_Type>(rows, cols, input) {}
 
-    Matrix(const Matrix& object):
-        Table_Class<Content_Type>(object) {}
-
     template <typename Second_Type>
     Matrix(const Matrix<Second_Type, Table_Class> &);
 
     Matrix(
         size_t rows,
         size_t cols,
-        std::initializer_list
+        const std::initializer_list
             <std::initializer_list<Content_Type>>&
         components
     ): Table_Class<Content_Type>(rows, cols, components) {}
@@ -83,6 +83,17 @@ public:
         Queue<size_t> cols;
     };
 
+    void for_each(
+        const sparse_t& matrix,
+        std::function<void(Content_Type, size_t, size_t)> doThis
+    ) {
+        for (size_t i = 0; i < matrix.rows.size() - 1; ++i)
+            for ( size_t index = matrix.rows[i];
+                  index < matrix.rows[i + 1];
+                  ++index )
+                doThis(matrix.vertices[index], i, matrix.cols[index]);
+    }
+
     sparse_t to_sparse(
         const Content_Type& zero = (Content_Type)0
     ) const;
@@ -93,17 +104,58 @@ public:
 
     template <typename Second_Type>
     Matrix & operator=(
-        const Matrix<Second_Type, Table_Class> &
-    );
-
-    template <typename Second_Type>
-    Matrix & operator=(
         const std::initializer_list
             <std::initializer_list<Second_Type>>&
     );
 
+    template <typename Second_Type>
+    Matrix & operator=(
+        const Matrix<Second_Type, Table_Class> &
+    );
+
+    template <typename Second_Type>
+    Matrix & operator+=(
+        const Matrix<Second_Type, Table_Class> &
+    );
+
+    template <typename Second_Type>
+    Matrix & operator-=(
+        const Matrix<Second_Type, Table_Class> &
+    );
+
+    template <typename Second_Type>
+    Matrix & operator*=(
+        const Matrix<Second_Type, Table_Class> &
+    );
+
+    template <typename Second_Type>
+    Matrix & operator/=(
+        const Matrix<Second_Type, Table_Class> &
+    );
+
     bool operator==(const Matrix &) const;
     bool operator!=(const Matrix &) const;
+    const Matrix operator-() const;
+
+    template <typename Second_Type>
+    const Matrix operator+(
+        const Matrix<Second_Type, Table_Class> &
+    ) const;
+
+    template <typename Second_Type>
+    const Matrix operator-(
+        const Matrix<Second_Type, Table_Class> &
+    ) const;
+
+    template <typename Second_Type>
+    const Matrix operator*(
+        const Matrix<Second_Type, Table_Class> &
+    ) const;
+
+    template <typename Second_Type>
+    const Matrix operator/(
+        const Matrix<Second_Type, Table_Class> &
+    ) const;
 
     /**************************
      * --- Static Methods --- *
@@ -136,7 +188,7 @@ public:
     );
 
     template <typename Type_2>
-    static const Matrix cross_product(
+    static const Matrix product(
         const Matrix &,
         const Matrix<Type_2, Table_Class> &
     );
@@ -438,8 +490,9 @@ typename Matrix<C, T>::sparse_t
 Matrix<C, T>::to_sparse(
     const C& zero
 ) const {
-    int index = 0;
     C temp;
+    int index = 0;
+    int prevRow = -1;
     auto sparse = sparse_t();
 
     for (int row = 0; row < this->rows(); ++row) {
@@ -448,13 +501,18 @@ Matrix<C, T>::to_sparse(
 
             if (temp != zero) {
                 sparse.vertices.push(temp);
-                sparse.rows.push(row);
                 sparse.cols.push(col);
+
+                if (row != prevRow)
+                    sparse.rows.push(index);
+
                 index = index + 1;
+                prevRow = row;
             }
         }
     }
 
+    sparse.rows.push(index);
     return sparse;
 }
 
@@ -462,13 +520,6 @@ Matrix<C, T>::to_sparse(
 /******************************
  * --- Operator Overloads --- *
  ******************************/
-
-// Assignment Operator
-template <typename C, template<typename> class T>
-template <typename D>
-Matrix<C, T> & Matrix<C, T>::operator=(const Matrix<D, T> & object) {
-    return *this = Matrix(object);
-}
 
 template <typename C, template<typename> class T>
 template <typename D>
@@ -488,6 +539,37 @@ Matrix<C, T> & Matrix<C, T>::operator=(
 }
 
 template <typename C, template<typename> class T>
+template <typename D>
+Matrix<C, T> & Matrix<C, T>::operator=(const Matrix<D, T> & object) {
+    return *this = Matrix(object);
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+Matrix<C, T> & Matrix<C, T>::operator+=(const Matrix<D, T> & object) {
+    return *this = sum(*this, object);
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+Matrix<C, T> & Matrix<C, T>::operator-=(const Matrix<D, T> & object) {
+    return *this = sum(*this, scalar_product(-1, object));
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+Matrix<C, T> & Matrix<C, T>::operator*=(const Matrix<D, T> & object) {
+    return *this = product(*this, object);
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+Matrix<long double, T> &
+Matrix<C, T>::operator/=(const Matrix<D, T> & object) {
+    return *this = product(very_precise_inverse(), object);
+}
+
+template <typename C, template<typename> class T>
 bool Matrix<C, T>::operator==(const Matrix & other) const {
     return T<C>::operator==(other);
 }
@@ -497,6 +579,42 @@ bool Matrix<C, T>::operator!=(const Matrix & other) const {
     return T<C>::operator!=(other);
 }
 
+template <typename C, template<typename> class T>
+const Matrix<C, T> Matrix<C, T>::operator-() const {
+    return scalar_product(-1, *this);
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+const Matrix<C, T> Matrix<C, T>::operator+(
+    const Matrix & other
+) const {
+    return sum(*this, other);
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+const Matrix<C, T> Matrix<C, T>::operator-(
+    const Matrix & other
+) const {
+    return sum(*this, scalar_product(-1, other));
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+const Matrix<C, T> Matrix<C, T>::operator*(
+    const Matrix & other
+) const {
+    return product(*this, other);
+}
+
+template <typename C, template<typename> class T>
+template <typename D>
+const Matrix<long double, T> Matrix<C, T>::operator/(
+    const Matrix & other
+) const {
+    return product(very_precise_inverse(), other);
+}
 
 /**************************
  * --- Static Methods --- *
@@ -567,21 +685,12 @@ C Matrix<C, T>::dot_product(
     const Matrix & factor1,
     const Matrix<B, T> & factor2
 ) {
-    if (factor1.cols() != factor2.rows())
-        return (C)0;
-
-    double product = 0;
-    size_t cols = factor1.cols();
-
-    for (size_t count = 0; count < cols; count++)
-        product += factor1[0][count] * factor2[count][0];
-
-    return (C)product;
+    return dot_product(factor1, 0, factor2, 0);
 }
 
 template <typename C, template<typename> class T>
 template <typename B>
-const Matrix<C, T> Matrix<C, T>::cross_product(
+const Matrix<C, T> Matrix<C, T>::product(
     const Matrix & factor1,
     const Matrix<B, T> & factor2
 ) {
