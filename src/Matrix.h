@@ -83,16 +83,22 @@ public:
         Queue<size_t> cols;
     };
 
+    template <typename M>
+    static sparse_t
+    sparse(
+        const M&,
+        const Content_Type& zero = (Content_Type)0
+    );
+
+    static void for_each(
+        const sparse_t&,
+        std::function<void(Content_Type, size_t, size_t)>
+    );
+
     void for_each(
-        const sparse_t& matrix,
-        std::function<void(Content_Type, size_t, size_t)> doThis
-    ) {
-        for (size_t i = 0; i < matrix.rows.size() - 1; ++i)
-            for ( size_t index = matrix.rows[i];
-                  index < matrix.rows[i + 1];
-                  ++index )
-                doThis(matrix.vertices[index], i, matrix.cols[index]);
-    }
+        std::function<void(Content_Type, size_t, size_t)>,
+        const Content_Type& zero = (Content_Type)0
+    ) const;
 
     sparse_t to_sparse(
         const Content_Type& zero = (Content_Type)0
@@ -153,7 +159,7 @@ public:
     ) const;
 
     template <typename Second_Type>
-    const Matrix operator/(
+    const Matrix<long double, Table_Class> operator/(
         const Matrix<Second_Type, Table_Class> &
     ) const;
 
@@ -486,34 +492,67 @@ Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const {
 }
 
 template <typename C, template<typename> class T>
+template <typename M>
 typename Matrix<C, T>::sparse_t
-Matrix<C, T>::to_sparse(
-    const C& zero
-) const {
-    C temp;
+Matrix<C, T>::sparse(
+    const M& matrical, const C& zero
+) {
     int index = 0;
     int prevRow = -1;
     auto sparse = sparse_t();
+
+    matrical.for_each(
+        [&](C vertex, size_t row, size_t col) -> void {
+            sparse.vertices.push(vertex);
+            sparse.cols.push(col);
+
+            if (row != prevRow)
+                sparse.rows.push(index);
+
+            index = index + 1;
+            prevRow = row;
+        },
+        zero
+    );
+
+    sparse.rows.push(index);
+    return sparse;
+}
+
+template <typename C, template<typename> class T>
+void Matrix<C, T>::for_each(
+    const typename Matrix<C, T>::sparse_t& matrix,
+    std::function<void(C, size_t, size_t)> doThis
+) {
+    for (size_t i = 0; i < matrix.rows.size() - 1; ++i)
+        for ( size_t index = matrix.rows[i];
+              index < matrix.rows[i + 1];
+              ++index )
+            doThis(matrix.vertices[index], i, matrix.cols[index]);
+}
+
+template <typename C, template<typename> class T>
+void
+Matrix<C, T>::for_each(
+    std::function<void(C, size_t, size_t)> doThis,
+    const C& zero
+) const {
+    C temp;
 
     for (int row = 0; row < this->rows(); ++row) {
         for (int col = 0; col < this->cols(); ++col) {
             temp = (*this)[row][col];
 
-            if (temp != zero) {
-                sparse.vertices.push(temp);
-                sparse.cols.push(col);
-
-                if (row != prevRow)
-                    sparse.rows.push(index);
-
-                index = index + 1;
-                prevRow = row;
-            }
+            if (temp != zero)
+                doThis(temp, row, col);
         }
     }
+}
 
-    sparse.rows.push(index);
-    return sparse;
+template <typename C, template<typename> class T>
+typename Matrix<C, T>::sparse_t
+Matrix<C, T>::to_sparse(const C& zero) const {
+    return sparse(*this, zero);
 }
 
 
@@ -564,7 +603,7 @@ Matrix<C, T> & Matrix<C, T>::operator*=(const Matrix<D, T> & object) {
 
 template <typename C, template<typename> class T>
 template <typename D>
-Matrix<long double, T> &
+Matrix<C, T> &
 Matrix<C, T>::operator/=(const Matrix<D, T> & object) {
     return *this = product(very_precise_inverse(), object);
 }
@@ -587,7 +626,7 @@ const Matrix<C, T> Matrix<C, T>::operator-() const {
 template <typename C, template<typename> class T>
 template <typename D>
 const Matrix<C, T> Matrix<C, T>::operator+(
-    const Matrix & other
+    const Matrix<D, T> & other
 ) const {
     return sum(*this, other);
 }
@@ -595,7 +634,7 @@ const Matrix<C, T> Matrix<C, T>::operator+(
 template <typename C, template<typename> class T>
 template <typename D>
 const Matrix<C, T> Matrix<C, T>::operator-(
-    const Matrix & other
+    const Matrix<D, T> & other
 ) const {
     return sum(*this, scalar_product(-1, other));
 }
@@ -603,7 +642,7 @@ const Matrix<C, T> Matrix<C, T>::operator-(
 template <typename C, template<typename> class T>
 template <typename D>
 const Matrix<C, T> Matrix<C, T>::operator*(
-    const Matrix & other
+    const Matrix<D, T> & other
 ) const {
     return product(*this, other);
 }
@@ -611,7 +650,7 @@ const Matrix<C, T> Matrix<C, T>::operator*(
 template <typename C, template<typename> class T>
 template <typename D>
 const Matrix<long double, T> Matrix<C, T>::operator/(
-    const Matrix & other
+    const Matrix<D, T> & other
 ) const {
     return product(very_precise_inverse(), other);
 }
