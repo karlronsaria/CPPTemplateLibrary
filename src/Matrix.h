@@ -16,6 +16,67 @@
 #include "Specialize/NumericClass.h"
 #include "Queue.h"
 
+namespace matrix {
+    template <typename Content_Type>
+    struct sparse_t {
+        Queue<Content_Type> vertices;
+        Queue<size_t> rows;
+        Queue<size_t> cols;
+    };
+
+    template <typename C, typename M>
+    static sparse_t<C>
+    sparse(
+        const M&,
+        const C& zero = (C)0
+    );
+
+    template <typename C>
+    static void for_each(
+        const sparse_t<C>&,
+        std::function<void(C, size_t, size_t)>
+    );
+}
+
+template <typename C, typename M>
+typename matrix::sparse_t<C>
+matrix::sparse(
+    const M& matrical, const C& zero
+) {
+    int index = 0;
+    int prevRow = -1;
+    auto sparse = sparse_t<C>();
+
+    matrical.for_each(
+        [&](C vertex, size_t row, size_t col) -> void {
+            sparse.vertices.push(vertex);
+            sparse.cols.push(col);
+
+            if (row != prevRow)
+                sparse.rows.push(index);
+
+            index = index + 1;
+            prevRow = row;
+        },
+        zero
+    );
+
+    sparse.rows.push(index);
+    return sparse;
+}
+
+template <typename C>
+void matrix::for_each(
+    const matrix::sparse_t<C>& m,
+    std::function<void(C, size_t, size_t)> doThis
+) {
+    for (size_t i = 0; i < m.rows.size() - 1; ++i)
+        for ( size_t index = m.rows[i];
+              index < m.rows[i + 1];
+              ++index )
+            doThis(m.vertices[index], i, m.cols[index]);
+}
+
 template<
     typename Content_Type,
     template<typename> class Table_Class = Table>
@@ -77,30 +138,13 @@ public:
     using Table_Class<Content_Type>::rows;
     using Table_Class<Content_Type>::cols;
 
-    struct sparse_t {
-        Queue<Content_Type> vertices;
-        Queue<size_t> rows;
-        Queue<size_t> cols;
-    };
-
-    template <typename M>
-    static sparse_t
-    sparse(
-        const M&,
-        const Content_Type& zero = (Content_Type)0
-    );
-
-    static void for_each(
-        const sparse_t&,
-        std::function<void(Content_Type, size_t, size_t)>
-    );
-
     void for_each(
         std::function<void(Content_Type, size_t, size_t)>,
         const Content_Type& zero = (Content_Type)0
     ) const;
 
-    sparse_t to_sparse(
+    matrix::sparse_t<Content_Type>
+    to_sparse(
         const Content_Type& zero = (Content_Type)0
     ) const;
 
@@ -492,46 +536,6 @@ Matrix<long double, T> Matrix<C, T>::very_precise_inverse() const {
 }
 
 template <typename C, template<typename> class T>
-template <typename M>
-typename Matrix<C, T>::sparse_t
-Matrix<C, T>::sparse(
-    const M& matrical, const C& zero
-) {
-    int index = 0;
-    int prevRow = -1;
-    auto sparse = sparse_t();
-
-    matrical.for_each(
-        [&](C vertex, size_t row, size_t col) -> void {
-            sparse.vertices.push(vertex);
-            sparse.cols.push(col);
-
-            if (row != prevRow)
-                sparse.rows.push(index);
-
-            index = index + 1;
-            prevRow = row;
-        },
-        zero
-    );
-
-    sparse.rows.push(index);
-    return sparse;
-}
-
-template <typename C, template<typename> class T>
-void Matrix<C, T>::for_each(
-    const typename Matrix<C, T>::sparse_t& matrix,
-    std::function<void(C, size_t, size_t)> doThis
-) {
-    for (size_t i = 0; i < matrix.rows.size() - 1; ++i)
-        for ( size_t index = matrix.rows[i];
-              index < matrix.rows[i + 1];
-              ++index )
-            doThis(matrix.vertices[index], i, matrix.cols[index]);
-}
-
-template <typename C, template<typename> class T>
 void
 Matrix<C, T>::for_each(
     std::function<void(C, size_t, size_t)> doThis,
@@ -550,9 +554,9 @@ Matrix<C, T>::for_each(
 }
 
 template <typename C, template<typename> class T>
-typename Matrix<C, T>::sparse_t
+matrix::sparse_t<C>
 Matrix<C, T>::to_sparse(const C& zero) const {
-    return sparse(*this, zero);
+    return matrix::sparse<C, Matrix<C, T>>(*this, zero);
 }
 
 
