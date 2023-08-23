@@ -36,6 +36,13 @@ namespace matrix {
         const sparse_t<C>&,
         std::function<void(C, size_t, size_t)>
     );
+
+    template <typename C>
+    static C& vertex(
+        sparse_t<C>&,
+        size_t row,
+        size_t col
+    );
 }
 
 template <typename C, typename M>
@@ -75,6 +82,15 @@ void matrix::for_each(
               index < m.rows[i + 1];
               ++index )
             doThis(m.vertices[index], i, m.cols[index]);
+}
+
+template <typename C>
+static C& matrix::vertex(
+    sparse_t<C>&,
+    size_t row,
+    size_t col
+) {
+
 }
 
 template<

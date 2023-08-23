@@ -39,28 +39,28 @@ A resizeable bitset
 
 ## Considerations
 
-- [x] skiplist
-  - [x] map
-- hash table
-  - set
-  - map
-- [x] bitset
-- B tree
-- priority queue
+- [ ] priority queue
 - graph
+  - [ ] dijkstra's algorithm
+  - dfs
+  - bfs
+  - minimum spanning tree
   - [x] set
   - [x] map
     - cancel: graph map describes a matrix
-  - dfs
-  - bfs
-  - dijkstra's algorithm
-  - minimum spanning tree
+- hash table
+  - set
+  - map
+- B tree
 - quaternion
 - tensor
-- [x] matrix
-  - [x] to_sparse: M -> M
 - ternary tree
 - sort
+- [x] bitset
+- [x] skiplist
+  - [x] map
+- [x] matrix
+  - [x] to_sparse: M -> M
 
 ---
 

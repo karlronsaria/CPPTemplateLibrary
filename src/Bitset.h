@@ -140,6 +140,7 @@ Bitset<T>::contains(size_t pos) const {
     return at(pos);
 }
 
+
 template <typename T>
 Bitset<T> &
 Bitset<T>::push(size_t pos, bool value) {
