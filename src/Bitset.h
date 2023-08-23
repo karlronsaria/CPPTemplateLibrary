@@ -12,10 +12,10 @@ private:
     _list;
 
     size_t
-	_size;
+    _size;
 
     static size_t
-	word_size() {
+    word_size() {
         return sizeof(T *);
     }
 
@@ -67,9 +67,11 @@ public:
     size_t size() const;
     size_t capacity() const;
     size_t count() const;
+    bool contains(size_t pos) const;
     Bitset & push(size_t pos, bool value = true);
     bool at(size_t pos) const;
     Bitset & set(size_t pos, bool value = true);
+    Bitset & clear(size_t pos);
     bool operator[](size_t pos) const;
     std::string to_string() const;
     std::ostream& operator<<(std::ostream&) const;
@@ -133,6 +135,12 @@ Bitset<T>::count() const {
 }
 
 template <typename T>
+bool
+Bitset<T>::contains(size_t pos) const {
+    return at(pos);
+}
+
+template <typename T>
 Bitset<T> &
 Bitset<T>::push(size_t pos, bool value) {
     while (pos / word_size() >= _list.size()) {
@@ -157,6 +165,15 @@ Bitset<T> &
 Bitset<T>::set(size_t pos, bool value) {
     _list[pos / word_size()]
         = set(_list[pos / word_size()], pos % word_size(), value);
+
+    return *this;
+}
+
+template <typename T>
+Bitset<T> &
+Bitset<T>::clear(size_t pos) {
+    _list[pos / word_size()]
+        = clear(_list[pos / word_size()], pos % word_size());
 
     return *this;
 }
