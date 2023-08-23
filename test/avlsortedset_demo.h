@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 
+using namespace avltree;
+
 // # link
 // - url: https://stackoverflow.com/questions/2710713/algorithm-to-generate-all-possible-permutations-of-a-list
 // - retrieved: 2023_08_05

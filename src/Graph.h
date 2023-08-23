@@ -2,10 +2,10 @@
 #define GRAPH_H_
 
 #include "Array.h"
-#include "VectorBitset.h"
+#include "Bitset.h"
 
 template <template <typename> class Alloc = Array>
-class GraphSet: public Alloc<vector_bitset<>> {
+class GraphSet: public Alloc<Bitset<>> {
 public:
     virtual ~GraphSet() = default;
     GraphSet() = default;
@@ -13,10 +13,10 @@ public:
     GraphSet(const GraphSet&) = default;
 
     GraphSet(size_t size):
-        Alloc<vector_bitset<>>(size)
+        Alloc<Bitset<>>(size)
     {
         for (auto& row : *this)
-            row.raise_size(size);
+            row = Bitset<>(size);
     }
 
     size_t count() const {
@@ -47,7 +47,7 @@ public:
     }
 
     std::string to_string() const {
-        return Alloc<vector_bitset<>>::to_string("\n");
+        return Alloc<Bitset<>>::to_string("\n");
     }
 
     std::ostream& operator<<(std::ostream& out) const {

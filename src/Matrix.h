@@ -243,6 +243,11 @@ public:
         const Matrix<Type_2, Table_Class> &
     );
 
+    template <typename Type>
+    static const Matrix exp(
+        const Matrix &
+    );
+
     // Named Constructors
 
     static const Matrix  square     (size_t);

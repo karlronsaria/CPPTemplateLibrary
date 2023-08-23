@@ -99,7 +99,7 @@ public:
     }
 
     virtual void resize() {
-        resize(2 * _size);
+        resize(2 * (_size + 1));
     }
 
     virtual const T& operator[](int index) const {
